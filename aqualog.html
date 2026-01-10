@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaLog - Gerenciamento de Aquário Low Tech</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            850: 'var(--bg-panel)',
+                            900: 'var(--bg-main)',
+                            950: 'var(--bg-body)',
+                            800: 'var(--bg-element)',
+                            700: 'var(--border-color)',
+                            600: 'var(--text-muted)',
+                            500: 'var(--text-muted)',
+                            400: 'var(--text-muted)',
+                            300: 'var(--text-dim)',
+                        },
+                        white: 'var(--text-primary)',
+                        water: {
+                            300: 'var(--accent-light)',
+                            400: 'var(--accent-main)',
+                            500: 'var(--accent-strong)',
+                            900: 'var(--accent-dark)',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            /* Default (Dark Mode) */
+            --bg-body: #030712;
+            --bg-main: #111827;
+            --bg-panel: #1f2937;
+            --bg-element: #374151;
+            --border-color: #374151;
+            --text-primary: #f9fafb;
+            --text-muted: #9ca3af;
+            --text-dim: #d1d5db;
+            --accent-light: #67e8f9;
+            --accent-main: #22d3ee;
+            --accent-strong: #06b6d4;
+            --accent-dark: #164e63;
+        }
+
+        .theme-cyan {
+            --bg-body: #083344; --bg-main: #0e7490; --bg-panel: #155e75; --bg-element: #164e63; --border-color: #164e63;
+            --text-primary: #ecfeff; --text-muted: #a5f3fc; --text-dim: #cffafe;
+            --accent-light: #22d3ee; --accent-main: #06b6d4; --accent-strong: #0891b2; --accent-dark: #0e7490;
+        }
+
+        .theme-green {
+            --bg-body: #052e16; --bg-main: #14532d; --bg-panel: #166534; --bg-element: #14532d; --border-color: #14532d;
+            --text-primary: #f0fdf4; --text-muted: #86efac; --text-dim: #bbf7d0;
+            --accent-light: #4ade80; --accent-main: #22c55e; --accent-strong: #16a34a; --accent-dark: #14532d;
+        }
+
+        .theme-light {
+            --bg-body: #f1f5f9; --bg-main: #ffffff; --bg-panel: #f8fafc; --bg-element: #e2e8f0; --border-color: #cbd5e1;
+            --text-primary: #0f172a; --text-muted: #64748b; --text-dim: #475569;
+            --accent-light: #38bdf8; --accent-main: #0ea5e9; --accent-strong: #0284c7; --accent-dark: #bae6fd;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-dim); transition: background-color 0.3s, color 0.3s; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-body); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); }
+        
+        .range-group { @apply bg-gray-800 p-2 rounded border border-gray-700; }
+        .range-label { @apply text-[10px] text-gray-400 font-bold uppercase mb-1 block; }
+        
+        /* Tooltip para gráficos */
+        .chart-point:hover { r: 6; stroke-width: 3; cursor: pointer; }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden text-sm selection:bg-water-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="bg-gray-900 border-b border-gray-700 flex flex-col shadow-lg z-20 shrink-0 transition-colors duration-300">
+        
+        <!-- Row 1: Identity & Tank Info -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gray-900">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded bg-gradient-to-br from-water-400 to-blue-600 flex items-center justify-center text-white font-bold shadow-glow shrink-0">
+                    <i class="fa-solid fa-water"></i>
+                </div>
+                <div class="flex items-center gap-2 overflow-hidden">
+                    <h1 class="text-xl font-bold tracking-tight text-white leading-none whitespace-nowrap">AquaLog</h1>
+                    <span class="text-xl text-gray-700 font-light">|</span>
+                    <span id="headerTankName" class="text-xl font-bold tracking-tight text-water-400 leading-none truncate">Carregando...</span>
+                </div>
+            </div>
+            
+            <!-- Controls (Optional space for future header actions) -->
+            <div></div>
+        </div>
+
+        <!-- Row 2: Categories / Navigation -->
+        <nav class="flex gap-2 overflow-x-auto no-scrollbar items-center px-4 py-2 bg-gray-850/50 mask-linear-fade">
+            <button onclick="App.switchView('dashboard')" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+                <i class="fa-solid fa-chart-line text-water-400 group-hover:text-water-300"></i> Dashboard
+            </button>
+             <button onclick="App.switchView('registers')" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+                <i class="fa-solid fa-pen-to-square text-blue-400 group-hover:text-blue-300"></i> Registros
+            </button>
+            <button onclick="Modules.Gallery.open()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+                <i class="fa-solid fa-images text-pink-400 group-hover:text-pink-300"></i> Galeria
+            </button>
+            <button onclick="Modules.Schedule.open()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+                <i class="fa-regular fa-calendar-check text-purple-400 group-hover:text-purple-300"></i> Cronograma
+            </button>
+            <button onclick="Modules.Inventory.open()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+                <i class="fa-solid fa-boxes-stacked text-amber-400 group-hover:text-amber-300"></i> Inventário
+            </button>
+            <button onclick="Modules.Calculator.open()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+                <i class="fa-solid fa-calculator text-orange-400 group-hover:text-orange-300"></i> Calculadora
+            </button>
+            <button onclick="Modules.References.open()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+                <i class="fa-solid fa-sliders text-emerald-400 group-hover:text-emerald-300"></i> Configuração
+            </button>
+            <button onclick="Modules.Help.open()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+                <i class="fa-solid fa-circle-question text-teal-400 group-hover:text-teal-300"></i> Ajuda
+            </button>
+        </nav>
+    </header>
+
+    <!-- Global Alerts Container -->
+    <div id="globalAlerts" class="bg-gray-950 px-6 pt-4 pb-2 empty:hidden space-y-2 shrink-0 transition-colors duration-300">
+        <!-- Injected via JS -->
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex overflow-hidden relative">
+        
+        <!-- VIEW: DASHBOARD (Home) -->
+        <div id="view-dashboard" class="flex-1 overflow-auto p-4 sm:p-6 space-y-6 fade-in">
+            <!-- Injected via JS -->
+        </div>
+
+        <!-- VIEW: REGISTERS (Split Form + Table) -->
+        <div id="view-registers" class="flex-1 flex overflow-hidden w-full h-full hidden">
+            <!-- Left: Form -->
+            <aside class="w-full md:w-96 bg-gray-850 border-r border-gray-700 flex flex-col overflow-y-auto shrink-0 shadow-xl transition-colors duration-300">
+                <div class="p-5">
+                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-gray-400"></i> Novo Registro
+                    </h2>
+                    <form id="logForm" onsubmit="App.handleFormSubmit(event)" class="space-y-4">
+                        <div class="space-y-3">
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Parâmetros da Água</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="text-xs text-gray-400">Data</label><input type="date" name="date" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none placeholder-gray-500"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Temperatura da água">Temp (°C)</label><input type="number" step="0.1" name="temp" min="0" max="50" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Potencial Hidrogeniônico">pH</label><input type="number" step="0.1" name="ph" min="0" max="14" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Total de Sólidos Dissolvidos">TDS (ppm)</label><input type="number" step="1" name="tds" min="0" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Amônia">NH3</label><input type="number" step="0.01" name="nh3" min="0" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none placeholder-gray-500"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Nitrito">NO2</label><input type="number" step="0.01" name="no2" min="0" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none placeholder-gray-500"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Nitrato">NO3</label><input type="number" step="1" name="no3" min="0" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none placeholder-gray-500"></div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Dureza Geral">GH</label><input type="number" step="0.5" name="gh" min="0" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Dureza Carbonácea">KH</label><input type="number" step="0.5" name="kh" min="0" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Condutividade Elétrica">EC (µS)</label><input type="number" step="1" name="ec" min="0" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
+                            </div>
+                        </div>
+                        <hr class="border-gray-700">
+                        <div class="space-y-3">
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Manutenção</label>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Troca Parcial de Água">TPA (%)</label><input type="number" step="5" name="tpa" min="0" max="100" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Fertilizante Flora">Flora (ml)</label><input type="number" step="0.1" name="fert_flora" min="0" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Fertilizante Ferro">Fe (ml)</label><input type="number" step="0.1" name="fert_fe" min="0" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
+                            </div>
+                            
+                            <!-- Dynamic Checklist Container -->
+                            <div id="formChecklist" class="grid grid-cols-2 gap-2 text-gray-300 text-xs">
+                                <!-- Filled by JS based on CONFIG -->
+                            </div>
+                        </div>
+                        
+                        <hr class="border-gray-700">
+
+                        <!-- Photo / Media -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Foto / Registro Visual</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="text" name="photoUrl" id="photoUrl" placeholder="Cole a URL da imagem aqui..." class="flex-1 bg-gray-900 border border-gray-700 rounded p-2 text-white text-xs focus:border-water-500">
+                                <label class="cursor-pointer bg-gray-800 hover:bg-gray-700 text-gray-300 p-2 rounded border border-gray-700" title="Carregar do dispositivo">
+                                    <i class="fa-solid fa-folder-open"></i>
+                                    <input type="file" accept="image/*" class="hidden" onchange="App.handleImageUpload(this)">
+                                </label>
+                            </div>
+                            <input type="hidden" name="photoBase64" id="photoBase64">
+                            <div id="photoPreview" class="hidden text-xs text-green-400 flex items-center gap-2">
+                                <i class="fa-solid fa-check-circle"></i> Imagem carregada pronta para salvar
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs text-gray-400">Observações</label>
+                            <textarea name="notes" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white resize-none"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-water-500 hover:bg-water-400 text-gray-900 font-bold py-2.5 rounded transition shadow-lg">Salvar Registro</button>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- Right: Table -->
+            <section class="flex-1 bg-gray-900 flex flex-col min-w-0 transition-colors duration-300">
+                <div class="p-4 bg-gray-900 border-b border-gray-700 flex justify-between items-center transition-colors duration-300">
+                    <h2 class="text-lg font-semibold text-white">Histórico</h2>
+                    <div class="text-xs text-gray-400 flex gap-4">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> Ideal</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span> Atenção</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span> Crítico</span>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-800 text-gray-400 sticky top-0 z-10 text-xs uppercase">
+                            <tr>
+                                <th class="p-3 border-b border-gray-700">Data</th>
+                                <th class="p-3 border-b border-gray-700 text-center">Temp</th>
+                                <th class="p-3 border-b border-gray-700 text-center">pH</th>
+                                <th class="p-3 border-b border-gray-700 text-center hidden md:table-cell">N (ppm)</th>
+                                <th class="p-3 border-b border-gray-700 text-center hidden lg:table-cell">TDS</th>
+                                <th class="p-3 border-b border-gray-700">Manutenção</th>
+                                <th class="p-3 border-b border-gray-700">Obs / Mídia</th>
+                                <th class="p-3 border-b border-gray-700 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="text-gray-300 divide-y divide-gray-700"></tbody>
+                    </table>
+                    <div id="emptyState" class="hidden h-64 flex flex-col items-center justify-center text-gray-400">
+                        <i class="fa-solid fa-clipboard-list text-4xl mb-3"></i>
+                        <p>Nenhum registro encontrado.</p>
+                    </div>
+                </div>
+                <div class="p-3 bg-gray-850 border-t border-gray-700 flex gap-2">
+                    <button onclick="App.exportCSV()" class="text-xs text-water-400 border border-gray-700 px-2 py-1 rounded hover:bg-gray-700"><i class="fa-solid fa-download"></i> Exportar</button>
+                    <label class="text-xs text-gray-400 border border-gray-700 px-2 py-1 rounded hover:bg-gray-700 cursor-pointer"><i class="fa-solid fa-upload"></i> Importar<input type="file" id="importCsvInput" class="hidden" onchange="App.importCSV(this)"></label>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-950 border-t border-gray-700 py-3 px-6 text-xs text-gray-400 flex flex-col sm:flex-row justify-between items-center shrink-0 gap-2">
+        <div class="flex items-center gap-4">
+            <span><span class="font-mono">v4.4.0</span> | Modificado: <span id="lastModDate"></span></span>
+        </div>
+        
+        <a href="https://ccarvalho.net/meapoie.html" target="_blank" class="text-water-400 hover:text-water-300 hover:underline flex items-center gap-1 transition-colors">
+            <i class="fa-solid fa-heart text-red-500"></i> Ajude o projeto fazendo uma pequena doação
+        </a>
+
+        <div class="flex gap-3 items-center">
+            <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="hover:text-white transition-colors flex items-center gap-1" title="Licença AGPLv3 (Free Software Foundation)">
+                <i class="fa-solid fa-scale-balanced"></i> AGPLv3
+            </a>
+            <span class="text-gray-600">|</span>
+            <a href="https://github.com/alexsandroccarv" target="_blank" class="hover:text-white hover:underline transition-colors flex items-center gap-1">
+                <i class="fa-brands fa-github"></i> Alexsandro Cardoso Carvalho
+            </a>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="modalOverlay" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-4 text-white"></div>
+
+    <script>
+        // --- CONFIG & STATE ---
+        const CONFIG = {
+            storageKeyLogs: 'aqua_logs',
+            storageKeyConfig: 'aqua_config',
+            storageKeyInventory: 'aqua_inventory',
+            defaultConfig: {
+                tankName: 'Tanque Principal',
+                tankOwner: '',
+                tankVolume: 200,
+                tankNotes: '',
+                theme: 'default',
+                enableAlerts: true,
+                enableEmergencyAlerts: true,
+                enablePhotoperiod: true,
+                autoBackupInterval: 7,
+                lastBackupDate: null,
+                ranges: {
+                    temp: { min: 24, max: 28, minCrit: 22, maxCrit: 30 },
+                    ph: { min: 6.6, max: 7.2, minCrit: 6.0, maxCrit: 7.8 },
+                    tds: { min: 100, max: 300 },
+                    ec: { min: 200, max: 600 },
+                    nh3: { max: 0.02, maxCrit: 0.5 },
+                    no2: { max: 0.05, maxCrit: 1.0 },
+                    no3: { max: 20, maxCrit: 50 },
+                    gh: { min: 4, max: 12 },
+                    kh: { min: 3, max: 8 }
+                },
+                photoperiod: { start: '08:00', end: '16:00' },
+                // maintenance: stored as objects { name, freq }
+                maintenance: [
+                    { name: 'TPA (Troca Parcial)', freq: 'semanal' },
+                    { name: 'Poda de Plantas', freq: 'quinzenal' },
+                    { name: 'Limpeza das Mídias', freq: 'mensal' }
+                ],
+                maintenanceRefDay: 0, // 0 = Sunday
+                maintenanceTime: '09:00',
+                maintenanceStartDate: '' // YYYY-MM-DD
+            },
+            maintenanceItemsList: [
+                'Alimentação Especial',
+                'Checagem de Equipamentos',
+                'Dosagem de CO2/Carbono',
+                'Fertilização (Plantados)',
+                'Limpeza das Mídias',
+                'Limpeza do Impeller',
+                'Limpeza dos Vidros',
+                'Poda de Plantas',
+                'Reposição de Água',
+                'Sifonagem de Fundo',
+                'Testes de Parâmetros',
+                'TPA (Troca Parcial)',
+                'Troca do Perlon'
+            ]
+        };
+
+        const Store = {
+            logs: [], inventory: [], config: {},
+            init() {
+                this.logs = JSON.parse(localStorage.getItem(CONFIG.storageKeyLogs)) || [];
+                this.inventory = JSON.parse(localStorage.getItem(CONFIG.storageKeyInventory)) || [];
+                const saved = JSON.parse(localStorage.getItem(CONFIG.storageKeyConfig)) || {};
+                this.config = this.deepMerge(CONFIG.defaultConfig, saved);
+                
+                // Defaults safeguards
+                if(!Array.isArray(this.config.maintenance)) this.config.maintenance = CONFIG.defaultConfig.maintenance;
+                if(this.config.maintenanceRefDay === undefined) this.config.maintenanceRefDay = 0;
+                if(!this.config.photoperiod) this.config.photoperiod = { start: '08:00', end: '16:00' };
+                if(this.config.enableAlerts === undefined) this.config.enableAlerts = true;
+                if(this.config.enableEmergencyAlerts === undefined) this.config.enableEmergencyAlerts = true;
+                if(this.config.enablePhotoperiod === undefined) this.config.enablePhotoperiod = true;
+                if(this.config.autoBackupInterval === undefined) this.config.autoBackupInterval = 7;
+                if(this.config.tankOwner === undefined) this.config.tankOwner = '';
+            },
+            deepMerge(target, source) {
+                for (const key in source) {
+                    if (source[key] instanceof Object && key in target && !Array.isArray(source[key])) {
+                        Object.assign(source[key], this.deepMerge(target[key], source[key]));
+                    } else {
+                        target[key] = source[key];
+                    }
+                }
+                return target;
+            },
+            // Centralized Save with Error Handling
+            saveToStorage(key, data) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(data));
+                    return true;
+                } catch (e) {
+                    if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                        UI.showToast('⚠️ Armazenamento cheio! Exclua registros antigos, fotos ou faça um backup.', 'error');
+                    } else {
+                        console.error(e);
+                        UI.showToast('Erro desconhecido ao salvar dados.', 'error');
+                    }
+                    return false;
+                }
+            },
+            saveLogs() { 
+                if (this.saveToStorage(CONFIG.storageKeyLogs, this.logs)) {
+                    App.renderTable(); 
+                    return true;
+                }
+                return false;
+            },
+            saveInventory() { 
+                return this.saveToStorage(CONFIG.storageKeyInventory, this.inventory); 
+            },
+            saveConfig() { 
+                if (this.saveToStorage(CONFIG.storageKeyConfig, this.config)) {
+                    App.updateHeader(); App.applyTheme(); App.renderTable(); App.checkAlerts();
+                    return true;
+                }
+                return false;
+            },
+            // Backup functionality
+            exportData() {
+                const data = {
+                    version: '4.4.0',
+                    timestamp: new Date().toISOString(),
+                    logs: this.logs,
+                    inventory: this.inventory,
+                    config: this.config
+                };
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `aqualog_backup_${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                // Update last backup date
+                this.config.lastBackupDate = new Date().toISOString();
+                this.saveConfig();
+                UI.showToast('Backup realizado e data atualizada!', 'success');
+            },
+            importData(jsonString) {
+                try {
+                    const data = JSON.parse(jsonString);
+                    if (!data.logs || !data.config) throw new Error('Formato inválido');
+                    
+                    localStorage.setItem(CONFIG.storageKeyLogs, JSON.stringify(data.logs));
+                    localStorage.setItem(CONFIG.storageKeyInventory, JSON.stringify(data.inventory || []));
+                    localStorage.setItem(CONFIG.storageKeyConfig, JSON.stringify(data.config));
+                    
+                    return true;
+                } catch (e) {
+                    console.error(e);
+                    return false;
+                }
+            }
+        };
+
+        const Utils = {
+            formatDate(d) { if(!d) return '-'; const [y,m,day] = d.split('-'); return `${day}/${m}/${y}`; },
+            getParamColor(val, type) {
+                if (val === null || val === undefined || val === '') return 'text-gray-500';
+                const num = parseFloat(val);
+                const r = Store.config.ranges;
+                if (['temp', 'ph'].includes(type)) {
+                    if (num >= r[type].min && num <= r[type].max) return 'text-green-400 font-bold';
+                    if (num >= r[type].minCrit && num <= r[type].maxCrit) return 'text-yellow-400';
+                    return 'text-red-500 font-bold';
+                }
+                if (['nh3', 'no2', 'no3'].includes(type)) {
+                    if (num <= r[type].max) return 'text-green-400';
+                    if (num <= r[type].maxCrit) return 'text-yellow-400';
+                    return 'text-red-500 font-bold';
+                }
+                if (['tds', 'ec', 'gh', 'kh'].includes(type) && r[type]) {
+                    if (num >= r[type].min && num <= r[type].max) return 'text-green-400';
+                    return 'text-yellow-400';
+                }
+                return 'text-gray-300';
+            },
+            getTaskIcon(name) {
+                const map = {
+                    'Alimentação Especial': 'fa-utensils',
+                    'Checagem de Equipamentos': 'fa-plug',
+                    'Dosagem de CO2/Carbono': 'fa-cloud',
+                    'Fertilização (Plantados)': 'fa-bottle-droplet',
+                    'Limpeza das Mídias': 'fa-bacterium',
+                    'Limpeza do Impeller': 'fa-fan',
+                    'Limpeza dos Vidros': 'fa-eraser',
+                    'Poda de Plantas': 'fa-scissors',
+                    'Reposição de Água': 'fa-faucet-drip',
+                    'Sifonagem de Fundo': 'fa-broom',
+                    'Testes de Parâmetros': 'fa-vials',
+                    'TPA (Troca Parcial)': 'fa-water',
+                    'Troca do Perlon': 'fa-filter'
+                };
+                return map[name] || 'fa-check-circle';
+            },
+            generateCSV(data, filename) {
+                if(!data.length) return;
+                const headers = Object.keys(data[0]).join(';');
+                const rows = data.map(obj => Object.values(obj).map(val => {
+                    if (Array.isArray(val)) return `"${val.join(', ')}"`;
+                    return `"${String(val || '').replace(/"/g, '""')}"`
+                }).join(';'));
+                const blob = new Blob(['\uFEFF' + headers + '\n' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob); link.download = filename;
+                link.click();
+            }
+        };
+
+        const App = {
+            view: 'dashboard', // default view
+            init() {
+                Store.init();
+                this.updateHeader();
+                this.applyTheme();
+                this.renderChecklist();
+                this.checkAutoBackup();
+                
+                // Date Setup & Validation Limit
+                const dateInput = document.querySelector('input[name="date"]');
+                const today = new Date();
+                dateInput.valueAsDate = today;
+                // Set max attribute to prevent future selection in UI picker
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                dateInput.max = `${yyyy}-${mm}-${dd}`;
+
+                this.renderTable();
+                this.checkAlerts();
+                this.switchView('dashboard'); // Start on Dashboard
+                document.getElementById('lastModDate').innerText = new Date().toLocaleDateString();
+            },
+            updateHeader() { 
+                const tankName = Store.config.tankName;
+                const owner = Store.config.tankOwner;
+                const display = owner ? `${tankName} <span class="text-gray-600 mx-1">-</span> ${owner}` : tankName;
+                document.getElementById('headerTankName').innerHTML = display; 
+            },
+            applyTheme() {
+                document.body.className = "flex flex-col h-screen overflow-hidden text-sm selection:bg-water-500 selection:text-white " + 
+                    (Store.config.theme !== 'default' ? `theme-${Store.config.theme}` : '');
+            },
+            switchView(viewName) {
+                this.view = viewName;
+                const dashboard = document.getElementById('view-dashboard');
+                const registers = document.getElementById('view-registers');
+                
+                // Hide all
+                dashboard.classList.add('hidden');
+                registers.classList.add('hidden');
+                
+                if (viewName === 'dashboard') {
+                    dashboard.classList.remove('hidden');
+                    Modules.Dashboard.render();
+                } else if (viewName === 'registers') {
+                    registers.classList.remove('hidden');
+                }
+            },
+            validateLive(input) {
+                const val = input.value;
+                const name = input.name;
+                const r = Store.config.ranges[name];
+                
+                // Reset classes: remove dynamic colors (red, yellow, green) and restore defaults
+                input.classList.remove('border-yellow-500', 'border-red-500', 'border-green-500', 'text-yellow-400', 'text-red-500', 'text-green-400');
+                input.classList.add('border-gray-700', 'text-white');
+
+                if (val === '') return;
+
+                const num = parseFloat(val);
+                let status = 'good'; // good, warn, crit
+
+                if (['temp', 'ph'].includes(name)) {
+                    if (num < r.minCrit || num > r.maxCrit) status = 'crit';
+                    else if (num < r.min || num > r.max) status = 'warn';
+                } else if (['nh3', 'no2', 'no3'].includes(name)) {
+                    if (num > r.maxCrit) status = 'crit';
+                    else if (num > r.max) status = 'warn';
+                }
+
+                if (status === 'crit') {
+                    input.classList.remove('border-gray-700', 'text-white');
+                    input.classList.add('border-red-500', 'text-red-500');
+                } else if (status === 'warn') {
+                    input.classList.remove('border-gray-700', 'text-white');
+                    input.classList.add('border-yellow-500', 'text-yellow-400');
+                } else if (status === 'good') {
+                    input.classList.remove('border-gray-700', 'text-white');
+                    input.classList.add('border-green-500', 'text-green-400');
+                }
+            },
+            renderChecklist() {
+                const container = document.getElementById('formChecklist');
+                if(!container) return;
+                
+                // Exclude items already covered by specific inputs
+                const exclusions = ['TPA (Troca Parcial)', 'Fertilização (Plantados)', 'Testes de Parâmetros'];
+                const items = CONFIG.maintenanceItemsList.filter(i => !exclusions.includes(i));
+                
+                container.innerHTML = items.map(item => `
+                    <label class="flex items-center gap-2 cursor-pointer hover:text-white" title="${item}">
+                        <input type="checkbox" name="action_${item}" class="accent-water-500">
+                        <span><i class="fa-solid ${Utils.getTaskIcon(item)} text-[10px] mr-1 w-3 text-center"></i> ${item}</span>
+                    </label>
+                `).join('');
+            },
+            handleImageUpload(input) {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            const MAX_WIDTH = 800;
+                            let width = img.width;
+                            let height = img.height;
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                            canvas.width = width;
+                            canvas.height = height;
+                            ctx.drawImage(img, 0, 0, width, height);
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.7); 
+                            document.getElementById('photoBase64').value = dataUrl;
+                            document.getElementById('photoPreview').classList.remove('hidden');
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            },
+            handleFormSubmit(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+                
+                // --- VALIDATION: Prevent Future Dates ---
+                const inputDate = new Date(data.date + 'T00:00:00'); // Force local time start
+                const now = new Date();
+                now.setHours(0,0,0,0); // Normalize today to midnight
+
+                if (inputDate > now) {
+                    UI.showToast('Data inválida: Não é possível registrar manutenções futuras.', 'error');
+                    const dateInput = document.querySelector('input[name="date"]');
+                    dateInput.classList.remove('border-gray-700');
+                    dateInput.classList.add('border-red-500', 'text-red-500');
+                    setTimeout(() => {
+                        dateInput.classList.remove('border-red-500', 'text-red-500');
+                        dateInput.classList.add('border-gray-700');
+                    }, 3000);
+                    return;
+                }
+                // ----------------------------------------
+
+                const actions = [];
+                for(let key of formData.keys()) {
+                    if(key.startsWith('action_')) {
+                        actions.push(key.replace('action_', ''));
+                        delete data[key]; 
+                    }
+                }
+                
+                ['chk_tpa', 'chk_poda', 'chk_perlon', 'chk_vidros', 'chk_sifao', 'chk_filtro'].forEach(k => {
+                    if (data[k] === 'on') delete data[k]; 
+                });
+
+                if (data.photoBase64) {
+                    data.photo = data.photoBase64;
+                } else if (data.photoUrl) {
+                    data.photo = data.photoUrl;
+                }
+                delete data.photoBase64;
+                delete data.photoUrl;
+
+                data.actions = actions;
+                data.id = Date.now().toString();
+                
+                // Optimistic UI Update attempt
+                Store.logs.unshift(data); 
+                
+                // Try saving to disk
+                const saved = Store.saveLogs();
+                
+                if (saved) {
+                    e.target.reset(); 
+                    document.getElementById('photoBase64').value = '';
+                    document.getElementById('photoPreview').classList.add('hidden');
+                    document.querySelector('input[name="date"]').valueAsDate = new Date();
+                    
+                    // Reset validation colors
+                    const formInputs = document.getElementById('logForm').querySelectorAll('input[type="number"]');
+                    formInputs.forEach(inp => {
+                         inp.classList.remove('border-yellow-500', 'border-red-500', 'border-green-500', 'text-yellow-400', 'text-red-500', 'text-green-400');
+                         inp.classList.add('border-gray-700', 'text-white');
+                    });
+                    
+                    this.checkAlerts();
+                    UI.showToast('Registro salvo!');
+                } else {
+                    // Rollback if storage full
+                    Store.logs.shift(); // Remove the item we just added
+                    // Note: We do NOT reset the form so the user can fix the issue (e.g. remove photo) and try again
+                }
+            },
+            checkAlerts() {
+                const container = document.getElementById('globalAlerts');
+                if(!container) return;
+                container.innerHTML = '';
+                
+                if (!Store.config.enableAlerts) return; 
+
+                const plan = Store.config.maintenance || [];
+                const logs = Store.logs;
+                const now = new Date();
+                // Strip time for accurate date diff
+                now.setHours(0,0,0,0);
+
+                // --- 1. EMERGENCY CHEMICAL ALERTS (NO3 > LIMIT) ---
+                if (Store.config.enableEmergencyAlerts) {
+                    const lastLog = logs[0]; // Assuming newest is first
+                    if (lastLog) {
+                        const no3 = parseFloat(lastLog.no3 || 0);
+                        const no3Limit = Store.config.ranges.no3.max || 20;
+                        
+                        if (no3 > no3Limit) {
+                            const div = document.createElement('div');
+                            div.className = 'bg-red-900/60 border border-red-700/80 text-red-100 px-4 py-3 rounded flex items-center justify-between text-sm shadow-md animate-pulse';
+                            div.innerHTML = `
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-biohazard text-red-400 text-lg"></i>
+                                    <span><span class="font-bold">ALERTA CRÍTICO:</span> Nitrato (NO3) em <span class="font-bold">${no3}ppm</span> (Limite: ${no3Limit}ppm).</span>
+                                </div>
+                                <span class="text-[10px] uppercase bg-red-900/80 px-2 py-1 rounded border border-red-600 font-bold">Realizar TPA de Emergência!</span>
+                            `;
+                            container.appendChild(div);
+                        }
+                    }
+                }
+
+                // --- 2. SCHEDULE DELAY ALERTS ---
+                if (Store.config.enableAlerts) {
+                    const freqMap = { 'diario': 1, 'semanal': 7, 'quinzenal': 15, 'mensal': 30, 'trimestral': 90, 'semestral': 180 };
+                    const legacyMap = { 'TPA (Troca Parcial)': 'chk_tpa', 'Poda de Plantas': 'chk_poda', 'Limpeza dos Vidros': 'chk_vidros', 'Troca do Perlon': 'chk_perlon', 'Sifonagem de Fundo': 'chk_sifao' };
+
+                    plan.forEach(task => {
+                        const daysLimit = freqMap[task.freq] || 7;
+                        let lastDate = null;
+
+                        // Find last occurrence in logs
+                        for (const log of logs) {
+                            // Check modern actions array
+                            if (log.actions && log.actions.includes(task.name)) {
+                                lastDate = new Date(log.date + 'T00:00:00');
+                                break;
+                            }
+                            // Check specific inputs (TPA, Fert)
+                            if (task.name === 'TPA (Troca Parcial)' && parseFloat(log.tpa) > 0) {
+                                lastDate = new Date(log.date + 'T00:00:00');
+                                break;
+                            }
+                            // Check legacy checkboxes
+                            const legKey = legacyMap[task.name];
+                            if (legKey && log[legKey]) {
+                                lastDate = new Date(log.date + 'T00:00:00');
+                                break;
+                            }
+                        }
+
+                        if (lastDate) {
+                            const diffTime = now.getTime() - lastDate.getTime();
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            
+                            if (diffDays > daysLimit) {
+                                const div = document.createElement('div');
+                                div.className = 'bg-yellow-900/40 border border-yellow-700/50 text-yellow-200 px-4 py-2 rounded flex items-center justify-between text-sm shadow-sm fade-in';
+                                div.innerHTML = `
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+                                        <span><span class="font-bold">${task.name}</span> atrasada (${diffDays} dias)</span>
+                                    </div>
+                                    <span class="text-[10px] uppercase bg-yellow-900/60 px-2 py-0.5 rounded border border-yellow-800">Era para ser ${task.freq}</span>
+                                `;
+                                container.appendChild(div);
+                            }
+                        }
+                    });
+                }
+            },
+            checkAutoBackup() {
+                const interval = Store.config.autoBackupInterval;
+                if (!interval || interval <= 0) return;
+
+                const lastBackup = Store.config.lastBackupDate;
+                let daysSince = 0;
+
+                if (!lastBackup) {
+                    // Never backed up? Check if we have substantial data to warn about
+                    if (Store.logs.length > 5) daysSince = 999; 
+                } else {
+                    const last = new Date(lastBackup);
+                    const now = new Date();
+                    const diffTime = Math.abs(now - last);
+                    daysSince = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                }
+
+                if (daysSince >= interval) {
+                    const msg = lastBackup 
+                        ? `Lembrete de Segurança: Seu último backup foi há ${daysSince} dias.` 
+                        : `Lembrete de Segurança: Você ainda não fez um backup dos seus dados.`;
+                    
+                    // Custom Alert UI in Global Container
+                    const container = document.getElementById('globalAlerts');
+                    if (container) {
+                        const div = document.createElement('div');
+                        div.className = 'bg-blue-900/40 border border-blue-700/50 text-blue-200 px-4 py-3 rounded flex items-center justify-between text-sm shadow-sm fade-in';
+                        div.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved text-blue-400"></i>
+                                <span>${msg}</span>
+                            </div>
+                            <button onclick="Store.exportData(); this.parentElement.remove()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs font-bold transition">Fazer Backup Agora</button>
+                        `;
+                        container.appendChild(div);
+                    }
+                }
+            },
+            renderTable() {
+                const tbody = document.getElementById('historyTableBody');
+                tbody.innerHTML = '';
+                document.getElementById('emptyState').classList.toggle('hidden', Store.logs.length > 0);
+                
+                Store.logs.forEach(log => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-800 transition group';
+                    let badgesHtml = '';
+                    if(log.tpa && parseFloat(log.tpa) > 0) badgesHtml += `<span class="px-1 py-0.5 rounded bg-blue-900 text-blue-200 text-[10px] border border-blue-800 mr-1">TPA ${log.tpa}%</span>`;
+                    if (log.actions && Array.isArray(log.actions)) {
+                        badgesHtml += log.actions.map(act => `<span class="px-1 py-0.5 rounded bg-gray-700 text-gray-300 text-[10px] border border-gray-600 mr-1" title="${act}"><i class="fa-solid ${Utils.getTaskIcon(act)}"></i></span>`).join('');
+                    } else {
+                        if(log.chk_tpa) badgesHtml += `<span class="px-1 py-0.5 rounded bg-blue-900 text-blue-200 text-[10px] mr-1">TPA</span>`;
+                        if(log.chk_poda) badgesHtml += `<span class="px-1 py-0.5 rounded bg-green-900 text-green-200 text-[10px] mr-1">Poda</span>`;
+                    }
+                    
+                    let obsContent = log.notes || '-';
+                    if (log.photo) {
+                         obsContent = `<div class="flex items-center justify-between"><span class="truncate max-w-[80px]">${obsContent}</span><button onclick="UI.openImageModal('${log.photo}')" class="text-pink-400 hover:text-pink-300"><i class="fa-solid fa-camera"></i></button></div>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="p-3 border-b border-gray-700 font-mono whitespace-nowrap">${Utils.formatDate(log.date)}</td>
+                        <td class="p-3 border-b border-gray-700 text-center ${Utils.getParamColor(log.temp, 'temp')}">${log.temp || '-'}</td>
+                        <td class="p-3 border-b border-gray-700 text-center ${Utils.getParamColor(log.ph, 'ph')}">${log.ph || '-'}</td>
+                        <td class="p-3 border-b border-gray-700 text-center hidden md:table-cell text-xs"><span class="${Utils.getParamColor(log.nh3, 'nh3')}">NH3:${log.nh3||'-'}</span> <span class="${Utils.getParamColor(log.no2, 'no2')}">NO2:${log.no2||'-'}</span></td>
+                        <td class="p-3 border-b border-gray-700 text-center hidden lg:table-cell">${log.tds || '-'}</td>
+                        <td class="p-3 border-b border-gray-700"><div class="flex flex-wrap gap-1">${badgesHtml}</div></td>
+                        <td class="p-3 border-b border-gray-700 max-w-[120px]">${obsContent}</td>
+                        <td class="p-3 border-b border-gray-700"><button onclick="App.deleteLog('${log.id}')" class="text-gray-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            },
+            async deleteLog(id) { if(await UI.showConfirm('Excluir?')) { Store.logs = Store.logs.filter(l => l.id !== id); Store.saveLogs(); App.checkAlerts(); } },
+            exportCSV() { Utils.generateCSV(Store.logs, 'AquaLog.csv'); },
+            importCSV(input) { UI.showToast('Importação simulada.', 'info'); input.value=''; }
+        };
+
+        const Modules = {
+            Dashboard: {
+                open() { },
+                render() {
+                    const container = document.getElementById('view-dashboard');
+                    if (!container) return;
+                    
+                    const logs = Store.logs.slice().sort((a,b) => new Date(a.date) - new Date(b.date)); // Sort chronologically for graphs
+                    const recentLogs = logs.slice(-15); // Use last 15
+                    
+                    const avgTemp = (logs.reduce((a,b) => a + parseFloat(b.temp||0), 0) / (logs.length||1)).toFixed(1);
+
+                    // --- CHART HELPER ---
+                    const renderLineChart = (data, config, width=800, height=250) => {
+                        // Dynamically adjust for mobile screen width
+                        const isMobile = window.innerWidth < 640;
+                        const computedWidth = isMobile ? window.innerWidth - 60 : width; // Basic padding adj
+                        const computedHeight = isMobile ? 220 : height;
+
+                        if (data.length < 2) return `
+    <div class="h-48 bg-gray-800 rounded border border-gray-700 flex flex-col items-center justify-center text-gray-500 gap-3">
+        <svg class="w-12 h-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+        <div class="text-center">
+            <p class="text-xs font-medium">Dados insuficientes</p>
+            <button onclick="App.switchView('registers')" class="mt-2 text-[10px] text-water-400 hover:text-water-300 underline">Adicionar registro</button>
+        </div>
+    </div>`;
+                        
+                        const padding = { left: 40, right: 20, top: 20, bottom: 30 };
+                        const values = data.map(d => d.value);
+                        
+                        // Scale Y
+                        const minVal = config.min !== undefined ? config.min : Math.min(...values);
+                        const maxVal = config.max !== undefined ? config.max : Math.max(...values);
+                        const rangeY = maxVal - minVal || 1; // Avoid div by zero
+                        
+                        const mapY = (val) => computedHeight - padding.bottom - ((val - minVal) / rangeY * (computedHeight - padding.top - padding.bottom));
+                        const mapX = (idx) => padding.left + (idx / (data.length - 1)) * (computedWidth - padding.left - padding.right);
+
+                        // Lines
+                        const points = data.map((d, i) => `${mapX(i)},${mapY(d.value)}`).join(' ');
+                        const circles = data.map((d, i) => `<circle cx="${mapX(i)}" cy="${mapY(d.value)}" r="4" fill="${config.color}" class="chart-point"><title>${d.date}: ${d.value} ${config.unit||''}</title></circle>`).join('');
+
+                        // Axis
+                        const yAxis = `
+                            <line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${computedHeight-padding.bottom}" stroke="#4b5563" stroke-width="1"/>
+                            <text x="${padding.left - 8}" y="${mapY(maxVal) + 3}" text-anchor="end" fill="#9ca3af" font-size="10">${maxVal}</text>
+                            <text x="${padding.left - 8}" y="${mapY((maxVal+minVal)/2) + 3}" text-anchor="end" fill="#9ca3af" font-size="10">${((maxVal+minVal)/2).toFixed(1)}</text>
+                            <text x="${padding.left - 8}" y="${mapY(minVal) + 3}" text-anchor="end" fill="#9ca3af" font-size="10">${minVal}</text>
+                        `;
+                        // Simplified X Axis (First and Last date only to avoid overlap on mobile)
+                        const xAxis = `
+                            <line x1="${padding.left}" y1="${computedHeight-padding.bottom}" x2="${computedWidth-padding.right}" y2="${computedHeight-padding.bottom}" stroke="#4b5563" stroke-width="1"/>
+                            <text x="${padding.left}" y="${computedHeight-10}" fill="#9ca3af" font-size="10">${Utils.formatDate(data[0].date)}</text>
+                            <text x="${computedWidth-padding.right}" y="${computedHeight-10}" text-anchor="end" fill="#9ca3af" font-size="10">${Utils.formatDate(data[data.length-1].date)}</text>
+                        `;
+                        
+                        return `
+                        <svg viewBox="0 0 ${computedWidth} ${computedHeight}" class="w-full h-auto min-h-[180px] bg-gray-800 rounded border border-gray-700" preserveAspectRatio="none">
+                             ${yAxis} ${xAxis}
+                             <polyline fill="none" stroke="${config.color}" stroke-width="2" points="${points}"/>
+                             ${circles}
+                        </svg>`;
+                    };
+
+                    // Data Prep
+                    const tempData = recentLogs.filter(l => l.temp).map(l => ({date: l.date, value: parseFloat(l.temp)}));
+                    const phData = recentLogs.filter(l => l.ph).map(l => ({date: l.date, value: parseFloat(l.ph)}));
+                    const no3Data = recentLogs.filter(l => l.no3).map(l => ({date: l.date, value: parseFloat(l.no3)}));
+
+                    const tempChart = renderLineChart(tempData, {color: '#f97316', unit: '°C'});
+                    const phChart = renderLineChart(phData, {color: '#a855f7', unit: 'pH'});
+                    const no3Chart = renderLineChart(no3Data, {color: '#ef4444', unit: 'ppm', min: 0});
+
+                    // Expenses
+                    let totalExpense = 0;
+                    Store.inventory.forEach(i => totalExpense += parseFloat(i.val||0));
+
+                    container.innerHTML = `
+                        <!-- KPIs -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-gray-800 p-4 rounded border border-gray-700 flex items-center justify-between gap-4 flex-wrap">
+                                <div><p class="text-xs text-gray-400 uppercase">Temperatura Média</p><p class="text-2xl font-bold text-white">${avgTemp}°C</p></div>
+                                <i class="fa-solid fa-temperature-half text-orange-400 text-2xl shrink-0"></i>
+                            </div>
+                            <div class="bg-gray-800 p-4 rounded border border-gray-700 flex items-center justify-between gap-4 flex-wrap">
+                                <div><p class="text-xs text-gray-400 uppercase">Total Registros</p><p class="text-2xl font-bold text-white">${Store.logs.length}</p></div>
+                                <i class="fa-solid fa-list text-blue-400 text-2xl shrink-0"></i>
+                            </div>
+                            <div class="bg-gray-800 p-4 rounded border border-gray-700 flex items-center justify-between gap-4 flex-wrap">
+                                <div><p class="text-xs text-gray-400 uppercase">Patrimônio</p><p class="text-2xl font-bold text-green-400">R$ ${totalExpense.toFixed(2)}</p></div>
+                                <i class="fa-solid fa-sack-dollar text-green-600 text-2xl shrink-0"></i>
+                            </div>
+                             <div class="bg-gray-800 p-4 rounded border border-gray-700 flex items-center justify-between gap-4 flex-wrap">
+                                <div><p class="text-xs text-gray-400 uppercase">Volume</p><p class="text-2xl font-bold text-cyan-400">${Store.config.tankVolume} L</p></div>
+                                <i class="fa-solid fa-water text-cyan-600 text-2xl shrink-0"></i>
+                            </div>
+                        </div>
+
+                        <!-- Graphs Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-gray-800 p-4 rounded border border-gray-700 flex flex-col">
+                                 <h4 class="text-sm font-bold text-orange-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-temperature-half"></i> Histórico de Temperatura</h4>
+                                 <div class="flex-1 w-full">${tempChart}</div>
+                            </div>
+                            <div class="bg-gray-800 p-4 rounded border border-gray-700 flex flex-col">
+                                 <h4 class="text-sm font-bold text-purple-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-vial"></i> Estabilidade de pH</h4>
+                                 <div class="flex-1 w-full">${phChart}</div>
+                            </div>
+                            <div class="bg-gray-800 p-4 rounded border border-gray-700 col-span-1 lg:col-span-2 flex flex-col">
+                                 <h4 class="text-sm font-bold text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-biohazard"></i> Níveis de Nitrato (NO3) - Controle de TPA</h4>
+                                 <div class="flex-1 w-full">${no3Chart}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            Gallery: {
+                open() {
+                    const logsWithPhotos = Store.logs.filter(l => l.photo).reverse();
+                    let content = '';
+                    
+                    if (logsWithPhotos.length === 0) {
+                        content = `
+        <div class="flex flex-col items-center justify-center h-96 text-gray-500 gap-4">
+            <div class="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mb-2 shadow-inner">
+                <i class="fa-solid fa-camera text-4xl text-gray-700"></i>
+            </div>
+            <div class="text-center space-y-1">
+                <h4 class="text-lg font-bold text-gray-400">Sua galeria está vazia</h4>
+                <p class="text-sm text-gray-600 max-w-xs mx-auto">Registre momentos importantes e acompanhe a evolução visual do seu aquário.</p>
+            </div>
+            <button onclick="UI.closeModal(); App.switchView('registers')" class="px-6 py-2 bg-water-600 hover:bg-water-500 text-white rounded-full font-bold text-sm transition shadow-lg flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i> Adicionar primeira foto
+            </button>
+        </div>`;
+                    } else {
+                        content = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                            ${logsWithPhotos.map(l => `
+                                <div class="bg-gray-800 rounded border border-gray-700 overflow-hidden shadow-lg group">
+                                    <div class="h-48 overflow-hidden relative cursor-pointer" onclick="UI.openImageModal('${l.photo}')">
+                                        <img src="${l.photo}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
+                                            <span class="text-white font-bold text-sm">${Utils.formatDate(l.date)}</span>
+                                        </div>
+                                    </div>
+                                    <div class="p-3">
+                                        <p class="text-xs text-gray-400 truncate">${l.notes || 'Sem observações'}</p>
+                                        <div class="flex gap-2 mt-2 text-[10px] text-gray-500">
+                                            ${l.ph ? `<span>pH: ${l.ph}</span>` : ''}
+                                            ${l.temp ? `<span>${l.temp}°C</span>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                    }
+
+                    const html = `
+                        <div class="bg-gray-900 w-full max-w-5xl max-h-[90vh] rounded-lg shadow-2xl flex flex-col border border-gray-700 fade-in">
+                            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850 rounded-t-lg">
+                                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-images text-pink-400 mr-2"></i> Galeria do Aquário</h3>
+                                <button onclick="UI.closeModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times text-lg"></i></button>
+                            </div>
+                            <div class="flex-1 overflow-auto bg-gray-900">
+                                ${content}
+                            </div>
+                        </div>`;
+                    UI.openModal(html);
+                }
+            },
+            Inventory: {
+                open() {
+                    const html = `
+                        <div class="bg-gray-900 w-full max-w-5xl max-h-[90vh] rounded-lg shadow-2xl flex flex-col border border-gray-700 fade-in">
+                            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850 rounded-t-lg">
+                                <h3 class="text-lg font-bold text-white">Inventário</h3>
+                                <button onclick="UI.closeModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+                            </div>
+                            <div class="flex-1 overflow-auto p-4">
+                                <form id="invForm" class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4 bg-gray-800 p-3 rounded">
+                                    <input type="hidden" id="invId">
+                                    <div class="col-span-2"><label class="text-xs text-gray-400">Nome</label><input id="invName" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
+                                    <div><label class="text-xs text-gray-400">Tipo</label>
+                                        <select id="invType" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white">
+                                            <option>Fauna</option><option>Flora</option><option>Equipamentos</option><option>Decoração</option>
+                                            <option>Alimentação Especial</option><option>Manutenção</option><option>Testes</option><option>Outros</option>
+                                        </select>
+                                    </div>
+                                    <div><label class="text-xs text-gray-400">Qtd</label><input type="number" id="invQty" value="1" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
+                                    <div><label class="text-xs text-gray-400">R$</label><input type="number" id="invVal" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
+                                    <div><label class="text-xs text-gray-400">Data</label><input type="date" id="invDate" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
+                                    <div class="col-span-2 md:col-span-5"><label class="text-xs text-gray-400">Detalhes</label><input id="invDetails" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
+                                    <div class="flex items-end"><button type="button" onclick="Modules.Inventory.save()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-1 rounded">Salvar</button></div>
+                                </form>
+                                <table class="w-full text-left text-xs text-gray-300"><thead class="bg-gray-800 uppercase"><tr><th class="p-2">St</th><th class="p-2">Item</th><th class="p-2">Tipo</th><th class="p-2">Qtd</th><th class="p-2">Valor</th><th class="p-2">Ações</th></tr></thead><tbody id="invBody"></tbody></table>
+                                <div id="invSummary" class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4"></div>
+                            </div>
+                        </div>`;
+                    UI.openModal(html);
+                    document.getElementById('invDate').valueAsDate = new Date();
+                    this.render();
+                },
+                save() {
+                    const id = document.getElementById('invId').value;
+                    const item = {
+                        name: document.getElementById('invName').value,
+                        type: document.getElementById('invType').value,
+                        qty: document.getElementById('invQty').value,
+                        val: document.getElementById('invVal').value,
+                        date: document.getElementById('invDate').value,
+                        details: document.getElementById('invDetails').value,
+                        active: true
+                    };
+                    if(!item.name) return UI.showToast('Nome obrigatório', 'error');
+                    
+                    if(id) {
+                        const idx = Store.inventory.findIndex(i => i.id == id);
+                        if(idx > -1) Store.inventory[idx] = { ...Store.inventory[idx], ...item };
+                    } else {
+                        item.id = Date.now();
+                        Store.inventory.push(item);
+                    }
+                    Store.saveInventory(); this.render(); document.getElementById('invForm').reset();
+                },
+                render() {
+                    const tbody = document.getElementById('invBody');
+                    const summary = document.getElementById('invSummary');
+                    tbody.innerHTML = '';
+                    let totals = { Total: 0 };
+                    
+                    Store.inventory.forEach(i => {
+                        const val = parseFloat(i.val||0);
+                        if(!totals[i.type]) totals[i.type] = 0;
+                        totals[i.type] += val;
+                        totals.Total += val;
+                        
+                        tbody.innerHTML += `
+                            <tr class="border-b border-gray-800 hover:bg-gray-800">
+                                <td class="p-2">${i.active ? '<i class="fa-solid fa-check text-green-500"></i>' : '<i class="fa-solid fa-xmark text-red-500"></i>'}</td>
+                                <td class="p-2 font-bold">${i.name}<div class="text-[10px] text-gray-500">${i.details}</div></td>
+                                <td class="p-2">${i.type}</td>
+                                <td class="p-2">${i.qty}</td>
+                                <td class="p-2">R$ ${val.toFixed(2)}</td>
+                                <td class="p-2">
+                                    <button onclick="Modules.Inventory.toggle(${i.id})"><i class="fa-solid fa-power-off text-gray-500 hover:text-white"></i></button>
+                                    <button onclick="Modules.Inventory.del(${i.id})"><i class="fa-solid fa-trash text-gray-500 hover:text-red-500 ml-2"></i></button>
+                                </td>
+                            </tr>`;
+                    });
+                    
+                    summary.innerHTML = Object.entries(totals).map(([k,v]) => `
+                        <div class="bg-gray-800 p-2 rounded border border-gray-700 text-center">
+                            <div class="text-[10px] uppercase text-gray-400">${k}</div>
+                            <div class="font-bold text-white">R$ ${v.toFixed(2)}</div>
+                        </div>`).join('');
+                },
+                toggle(id) { const i = Store.inventory.find(x => x.id == id); if(i) { i.active = !i.active; Store.saveInventory(); this.render(); } },
+                del(id) { Store.inventory = Store.inventory.filter(x => x.id != id); Store.saveInventory(); this.render(); }
+            },
+            Schedule: {
+                year: 2026,
+                view: 'list',
+                calendarDate: new Date(),
+                open() {
+                    this.year = 2026;
+                    this.view = 'list';
+                    this.calendarDate = new Date();
+                    
+                    const html = `
+                        <div class="bg-gray-900 w-full max-w-4xl max-h-[85vh] rounded-lg shadow-2xl border border-gray-700 fade-in flex flex-col">
+                            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850 shrink-0">
+                                <div class="flex gap-4 items-center">
+                                    <h3 class="font-bold text-white">Cronograma</h3>
+                                    <div class="flex bg-gray-800 rounded p-1 border border-gray-700">
+                                        <button onclick="Modules.Schedule.switchView('list')" id="btnViewList" class="px-3 py-1 rounded text-xs transition bg-gray-700 text-white"><i class="fa-solid fa-list-ul"></i> Lista</button>
+                                        <button onclick="Modules.Schedule.switchView('calendar')" id="btnViewCal" class="px-3 py-1 rounded text-xs transition text-gray-400 hover:text-gray-200"><i class="fa-solid fa-calendar-days"></i> Calendário</button>
+                                    </div>
+                                </div>
+                                <button onclick="UI.closeModal()"><i class="fa-solid fa-times text-gray-400"></i></button>
+                            </div>
+                            <div id="schedContent" class="flex-1 overflow-auto bg-gray-900 flex flex-col relative"></div>
+                        </div>`;
+                    UI.openModal(html);
+                    this.render();
+                },
+                switchView(v) {
+                    this.view = v;
+                    document.getElementById('btnViewList').className = `px-3 py-1 rounded text-xs transition ${v === 'list' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-gray-200'}`;
+                    document.getElementById('btnViewCal').className = `px-3 py-1 rounded text-xs transition ${v === 'calendar' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-gray-200'}`;
+                    this.render();
+                },
+                changeMonth(d) {
+                    this.calendarDate.setMonth(this.calendarDate.getMonth() + d);
+                    this.render();
+                },
+                addYear() { this.year++; this.render(); },
+                getTasksForDate(d, startDateObj, refDay, maintenance) {
+                    const tasks = [];
+                    maintenance.forEach(m => {
+                        if(m.freq === 'diario') tasks.push({name: m.name, icon: Utils.getTaskIcon(m.name), color: 'text-gray-400'});
+                    });
+                    if (d.getDay() === refDay) {
+                        const msPerWeek = 1000 * 60 * 60 * 24 * 7;
+                        const diffTime = d.getTime() - startDateObj.getTime();
+                        if (diffTime >= 0) {
+                            const weeksPassed = Math.round(diffTime / msPerWeek);
+                            const cycleIndex = weeksPassed + 1;
+                            maintenance.forEach(m => {
+                                let add = false;
+                                if(m.freq === 'semanal') add = true;
+                                if(m.freq === 'quinzenal' && cycleIndex % 2 === 0) add = true;
+                                if(m.freq === 'mensal' && cycleIndex % 4 === 0) add = true;
+                                if(m.freq === 'trimestral' && cycleIndex % 13 === 0) add = true;
+                                if(m.freq === 'semestral' && cycleIndex % 26 === 0) add = true;
+                                if(add) tasks.push({name: m.name, icon: Utils.getTaskIcon(m.name), color: 'text-water-400'});
+                            });
+                        }
+                    }
+                    return tasks;
+                },
+                render() {
+                    const container = document.getElementById('schedContent');
+                    if (!container) return;
+                    container.innerHTML = '';
+
+                    const refDay = parseInt(Store.config.maintenanceRefDay);
+                    const maint = Store.config.maintenance;
+                    const startTime = Store.config.maintenanceTime || '09:00';
+                    const weekDays = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+                    
+                    let startDateObj;
+                    if (Store.config.maintenanceStartDate) {
+                        startDateObj = new Date(Store.config.maintenanceStartDate + 'T00:00:00');
+                    } else {
+                        let temp = new Date(new Date().getFullYear(), 0, 1);
+                        while(temp.getDay() !== refDay) temp.setDate(temp.getDate() + 1);
+                        startDateObj = temp;
+                    }
+
+                    if (this.view === 'list') {
+                        let html = `<table class="w-full text-left text-sm text-gray-300"><thead class="bg-gray-800 sticky top-0 uppercase text-xs"><tr><th class="p-2">Sem</th><th class="p-2">Período</th><th class="p-2">Tarefas</th></tr></thead><tbody id="schedBody"></tbody></table>
+                                    <div class="p-3 border-t border-gray-700 text-center shrink-0"><button onclick="Modules.Schedule.addYear()" class="bg-gray-800 px-4 py-2 rounded text-xs text-white hover:bg-gray-700">+ Carregar Próximo Ano</button></div>`;
+                        container.innerHTML = html;
+                        const tbody = document.getElementById('schedBody');
+                        let dIter = new Date(this.year, 0, 1);
+                        while(dIter.getDay() !== refDay) dIter.setDate(dIter.getDate() + 1);
+                        tbody.innerHTML += `<tr class="bg-gray-800/50"><td colspan="3" class="p-2 text-center font-bold text-water-300 uppercase tracking-widest border-y border-gray-700">Ano ${this.year} (Ref: ${weekDays[refDay]} às ${startTime})</td></tr>`;
+                        while(dIter.getFullYear() === this.year) {
+                            const tasks = this.getTasksForDate(dIter, startDateObj, refDay, maint);
+                            const displayTasks = tasks.map(t => 
+                                `<span class="bg-gray-800 px-2 py-0.5 rounded text-[10px] border border-gray-600 uppercase font-bold tracking-wide ${t.color === 'text-gray-400' ? 'text-gray-500' : 'text-water-300'}"><i class="fa-solid ${t.icon} mr-1"></i>${t.name}</span>`
+                            );
+                            if(dIter >= startDateObj && displayTasks.length > 0) {
+                                const msPerWeek = 1000 * 60 * 60 * 24 * 7;
+                                const weeksPassed = Math.round((dIter.getTime() - startDateObj.getTime()) / msPerWeek);
+                                const cycleIndex = weeksPassed + 1;
+                                tbody.innerHTML += `<tr class="border-b border-gray-800 hover:bg-gray-800/50"><td class="p-2 w-12 text-center text-gray-500 font-mono">${cycleIndex}</td><td class="p-2 w-32 font-mono text-xs text-gray-400">${dIter.toLocaleDateString()}</td><td class="p-2"><div class="flex gap-2 flex-wrap">${displayTasks.join('')}</div></td></tr>`;
+                            }
+                            dIter.setDate(dIter.getDate() + 7);
+                        }
+                    } else {
+                        const year = this.calendarDate.getFullYear();
+                        const month = this.calendarDate.getMonth();
+                        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                        const header = `
+                            <div class="flex justify-between items-center p-3 bg-gray-850 border-b border-gray-700 shrink-0">
+                                <button onclick="Modules.Schedule.changeMonth(-1)" class="text-gray-400 hover:text-white px-2"><i class="fa-solid fa-chevron-left"></i></button>
+                                <span class="font-bold text-white text-sm uppercase tracking-widest">${monthNames[month]} ${year}</span>
+                                <button onclick="Modules.Schedule.changeMonth(1)" class="text-gray-400 hover:text-white px-2"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            <div class="grid grid-cols-7 bg-gray-800 border-b border-gray-700 text-center py-1 text-[10px] font-bold text-gray-500 uppercase shrink-0">
+                                ${weekDays.map(d => `<div>${d}</div>`).join('')}
+                            </div>`;
+                        const firstDay = new Date(year, month, 1);
+                        const lastDay = new Date(year, month + 1, 0);
+                        const daysInMonth = lastDay.getDate();
+                        const startDayOfWeek = firstDay.getDay(); 
+                        let gridHtml = '';
+                        for(let i=0; i<startDayOfWeek; i++) gridHtml += `<div class="bg-gray-900/30 border-r border-b border-gray-800 min-h-[80px]"></div>`;
+                        const today = new Date(); today.setHours(0,0,0,0);
+                        for(let d=1; d<=daysInMonth; d++) {
+                            const dateObj = new Date(year, month, d);
+                            const isToday = dateObj.getTime() === today.getTime();
+                            const tasks = this.getTasksForDate(dateObj, startDateObj, refDay, maint);
+                            const taskDots = tasks.map(t => `<div class="text-[9px] truncate ${t.color} mb-0.5 flex items-center gap-1 opacity-90"><i class="fa-solid ${t.icon} text-[8px]"></i> ${t.name}</div>`).join('');
+                            gridHtml += `<div class="border-r border-b border-gray-800 min-h-[80px] p-1 relative hover:bg-gray-800/30 transition group ${isToday?'bg-gray-800/60':''}"><span class="text-[10px] font-bold block mb-1 ${isToday ? 'text-water-400 bg-gray-700 w-5 h-5 flex items-center justify-center rounded-full' : 'text-gray-500'}">${d}</span><div class="flex flex-col overflow-hidden max-h-[60px]">${taskDots}</div></div>`;
+                        }
+                        container.innerHTML = `${header}<div class="grid grid-cols-7 auto-rows-fr bg-gray-900 flex-1 overflow-y-auto">${gridHtml}</div>`;
+                    }
+                }
+            },
+            References: {
+                open() {
+                    const c = Store.config;
+                    const r = c.ranges;
+                    
+                    const calcPhoto = () => {
+                        const start = document.getElementById('cPhotoStart').value;
+                        const end = document.getElementById('cPhotoEnd').value;
+                        if(start && end) {
+                            const [h1, m1] = start.split(':').map(Number);
+                            const [h2, m2] = end.split(':').map(Number);
+                            let diff = (h2*60+m2) - (h1*60+m1);
+                            if(diff < 0) diff += 24*60;
+                            const h = Math.floor(diff/60);
+                            const m = diff % 60;
+                            const totalMins = 24 * 60;
+                            const startMins = h1 * 60 + m1;
+                            const durationMins = h * 60 + m;
+                            const startPct = (startMins / totalMins) * 100;
+                            const widthPct = (durationMins / totalMins) * 100;
+                            document.getElementById('photoBar').style.left = `${startPct}%`;
+                            document.getElementById('photoBar').style.width = `${widthPct}%`;
+                            document.getElementById('photoText').innerText = `${h}h ${m>0 ? m+'m' : ''}`;
+                        }
+                    };
+
+                    const rangeInp = (id, min, max) => `<div class="range-group mt-1"><div class="flex gap-2"><div class="flex-1"><label class="text-[9px] uppercase text-green-400 font-bold">Ideal Min</label><input id="${id}Min" value="${min}" type="number" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center"></div><div class="flex-1"><label class="text-[9px] uppercase text-green-400 font-bold">Ideal Max</label><input id="${id}Max" value="${max}" type="number" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-center text-xs"></div></div></div>`;
+                    const critInp = (id, min, max) => `<div class="range-group mt-1 border-red-900/30"><div class="flex gap-2"><div class="flex-1"><label class="text-[9px] uppercase text-red-400 font-bold">Crit Min</label><input id="${id}MinCrit" value="${min}" type="number" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-center text-xs"></div><div class="flex-1"><label class="text-[9px] uppercase text-red-400 font-bold">Crit Max</label><input id="${id}MaxCrit" value="${max}" type="number" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-center text-xs"></div></div></div>`;
+                    const maxInp = (id, max, crit) => `<div class="range-group mt-1 flex gap-2"><div class="flex-1"><label class="text-[9px] uppercase text-green-400 font-bold">Max Ideal</label><input id="${id}Max" value="${max}" type="number" step="0.01" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-center text-xs"></div><div class="flex-1"><label class="text-[9px] uppercase text-red-400 font-bold">Critico ></label><input id="${id}MaxCrit" value="${crit}" type="number" step="0.01" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-center text-xs"></div></div>`;
+
+                    UI.openModal(`
+                        <div class="bg-gray-900 w-full max-w-3xl rounded-lg shadow-2xl border border-gray-700 fade-in flex flex-col max-h-[90vh]">
+                            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850"><h3 class="font-bold text-white">Configurações</h3><button onclick="UI.closeModal()"><i class="fa-solid fa-times text-gray-400"></i></button></div>
+                            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                                <section class="bg-blue-900/10 p-3 rounded border border-blue-900/30">
+                                    <h4 class="text-xs font-bold text-blue-300 uppercase mb-2">Notificações e Recursos</h4>
+                                    <div class="flex flex-col gap-2">
+                                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="cEnableAlerts" ${c.enableAlerts ? 'checked' : ''} class="accent-water-400"><span class="text-xs text-gray-300">Habilitar Alertas Dinâmicos de Atraso</span></label>
+                                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="cEnableEmergencyAlerts" ${c.enableEmergencyAlerts ? 'checked' : ''} class="accent-water-400"><span class="text-xs text-gray-300">Habilitar Alertas de Emergência (Química)</span></label>
+                                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="cEnablePhoto" ${c.enablePhotoperiod ? 'checked' : ''} class="accent-water-400" onchange="document.getElementById('secPhoto').classList.toggle('hidden', !this.checked)"><span class="text-xs text-gray-300">Habilitar Controle de Fotoperíodo</span></label>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs text-gray-400">Frequência de Backup Automático (dias):</span>
+                                            <input type="number" id="cAutoBackupInterval" value="${c.autoBackupInterval || 7}" min="0" class="w-16 bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center">
+                                            <span class="text-[9px] text-gray-500">(0 para desativar)</span>
+                                        </div>
+                                    </div>
+                                </section>
+                                <section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-3">Gerais</h4><div class="grid grid-cols-2 gap-4"><div class="col-span-2"><label class="text-xs text-gray-400">Nome do Tanque</label><input id="cName" value="${c.tankName}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div class="col-span-2"><label class="text-xs text-gray-400">Proprietário</label><input id="cOwner" value="${c.tankOwner || ''}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Volume (L)</label><input id="cVol" type="number" value="${c.tankVolume}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Tema</label><select id="cTheme" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"><option value="default">Dark</option><option value="cyan">Ciano</option><option value="green">Verde</option><option value="light">Light</option></select></div><div class="col-span-2"><label class="text-xs text-gray-400">Notas</label><textarea id="cNotes" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white text-xs">${c.tankNotes||''}</textarea></div></div></section>
+                                <section id="secPhoto" class="${c.enablePhotoperiod ? '' : 'hidden'} transition-all"><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-3">Fotoperíodo</h4><div class="bg-gray-800/50 p-4 rounded border border-gray-700 flex flex-col gap-4"><div class="relative h-8 bg-gray-900 rounded-full overflow-hidden border border-gray-700"><div class="absolute inset-0 flex text-[8px] text-gray-600 justify-between px-2 items-center"><span>00:00</span><span>12:00</span><span>23:59</span></div><div id="photoBar" class="absolute top-0 bottom-0 bg-gradient-to-r from-yellow-600 to-yellow-400 opacity-80 transition-all duration-500 rounded-full"></div></div><div class="flex items-center justify-between gap-4"><div class="text-center"><label class="text-[10px] text-gray-500 uppercase block mb-1"><i class="fa-solid fa-sun text-yellow-500"></i> Ligar</label><input type="time" id="cPhotoStart" value="${c.photoperiod?.start || '08:00'}" onchange="document.getElementById('btnCalcPhoto').click()" class="bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center w-20"></div><div class="flex flex-col items-center"><span class="text-xs font-bold text-white" id="photoText">8h</span><span class="text-[9px] text-gray-500 uppercase">Duração</span></div><div class="text-center"><label class="text-[10px] text-gray-500 uppercase block mb-1"><i class="fa-solid fa-moon text-blue-400"></i> Desligar</label><input type="time" id="cPhotoEnd" value="${c.photoperiod?.end || '16:00'}" onchange="document.getElementById('btnCalcPhoto').click()" class="bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center w-20"></div></div><button id="btnCalcPhoto" class="hidden"></button></div></section>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6"><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Temperatura</h4>${rangeInp('cTemp', r.temp.min, r.temp.max)}${critInp('cTemp', r.temp.minCrit, r.temp.maxCrit)}</section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">pH</h4>${rangeInp('cPh', r.ph.min, r.ph.max)}${critInp('cPh', r.ph.minCrit, r.ph.maxCrit)}</section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Condutividade & Sólidos</h4><div class="mb-2"><span class="text-xs text-gray-400 cursor-help" title="Total de Sólidos Dissolvidos">TDS</span> ${rangeInp('cTds', r.tds.min, r.tds.max)}</div><div><span class="text-xs text-gray-400 cursor-help" title="Condutividade Elétrica">EC</span> ${rangeInp('cEc', r.ec.min, r.ec.max)}</div></section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Nitrogenados (Limites)</h4><div class="space-y-2"><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Amônia">NH3</span>${maxInp('cNh3', r.nh3.max, r.nh3.maxCrit)}</div><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Nitrito">NO2</span>${maxInp('cNo2', r.no2.max, r.no2.maxCrit)}</div><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Nitrato">NO3</span>${maxInp('cNo3', r.no3.max, r.no3.maxCrit)}</div></div></section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Dureza</h4><div class="mb-2"><span class="text-xs text-gray-400 cursor-help" title="Dureza Geral">GH</span> ${rangeInp('cGh', r.gh.min, r.gh.max)}</div><div><span class="text-xs text-gray-400 cursor-help" title="Dureza Carbonácea">KH</span> ${rangeInp('cKh', r.kh.min, r.kh.max)}</div></section></div>
+                                <section class="bg-gray-800/50 p-4 rounded border border-gray-700"><h4 class="text-xs font-bold text-water-400 uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Plano de Manutenção</h4><div class="flex gap-2 mb-4 items-end"><div class="flex-1"><label class="text-[10px] text-gray-500 uppercase">Item</label><select id="newMaintName" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs">${CONFIG.maintenanceItemsList.map(i => `<option>${i}</option>`).join('')}</select></div><div class="w-32"><label class="text-[10px] text-gray-500 uppercase">Frequência</label><select id="newMaintFreq" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"><option value="diario">Diário</option><option value="semanal">Semanal</option><option value="quinzenal">Quinzenal</option><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option><option value="semestral">Semestral</option></select></div><button onclick="Modules.References.addMaint()" class="bg-green-600 hover:bg-green-500 px-4 py-1.5 rounded text-white font-bold transition"><i class="fa-solid fa-plus"></i></button></div><div class="space-y-1 mb-4" id="maintList"></div><div class="border-t border-gray-700 pt-3 mb-4"><h5 class="text-xs font-bold text-gray-400 mb-2">Manutenção Periódica</h5><div class="grid grid-cols-3 gap-2"><div><label class="text-[10px] text-gray-500 uppercase">Dia da Semana</label><select id="cRefDay" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"><option value="0">Domingo</option><option value="1">Segunda</option><option value="2">Terça</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option><option value="6">Sábado</option></select></div><div><label class="text-[10px] text-gray-500 uppercase">Horário</label><input type="time" id="cRefTime" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"></div><div><label class="text-[10px] text-gray-500 uppercase">Início do Ciclo</label><input type="date" id="cRefStart" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"></div></div></div><div class="flex gap-2"><button onclick="Modules.References.updateSchedule()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-xs"><i class="fa-solid fa-sync mr-1"></i> Atualizar Cronograma</button><button onclick="Modules.References.generateICS()" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded text-xs"><i class="fa-solid fa-calendar-alt mr-1"></i> Gerar Agenda (.ics)</button></div></section>
+
+                                <!-- Backup Section -->
+                                <section class="bg-gray-800 p-4 rounded border border-gray-600 mt-6">
+                                    <h4 class="text-xs font-bold text-white uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-database text-amber-500"></i> Dados do Sistema (Backup & Restore)</h4>
+                                    <div class="flex flex-col gap-3">
+                                        <button onclick="Store.exportData()" class="w-full bg-gray-700 hover:bg-gray-600 border border-gray-500 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-2 transition">
+                                            <i class="fa-solid fa-download"></i> Baixar Backup Completo (.json)
+                                        </button>
+                                        
+                                        <div class="relative">
+                                            <input type="file" id="restoreInput" accept=".json" class="hidden" onchange="Modules.References.handleRestore(this)">
+                                            <button onclick="document.getElementById('restoreInput').click()" class="w-full bg-red-900/50 hover:bg-red-900/70 border border-red-800 text-red-200 py-2 rounded text-xs font-bold flex items-center justify-center gap-2 transition">
+                                                <i class="fa-solid fa-upload"></i> Restaurar Backup
+                                            </button>
+                                        </div>
+                                        <p class="text-[9px] text-gray-500 text-center">Atenção: Restaurar um backup substituirá todos os dados atuais.</p>
+                                    </div>
+                                </section>
+                            </div>
+                            <div class="p-4 border-t border-gray-700 bg-gray-850"><button onclick="Modules.References.save()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded shadow-lg">Salvar Configurações</button></div>
+                        </div>`);
+                    
+                    document.getElementById('cTheme').value = c.theme;
+                    document.getElementById('cRefDay').value = c.maintenanceRefDay;
+                    document.getElementById('cRefTime').value = c.maintenanceTime;
+                    document.getElementById('cRefStart').value = c.maintenanceStartDate;
+                    document.getElementById('btnCalcPhoto').onclick = calcPhoto;
+                    
+                    calcPhoto(); 
+                    this.renderMaintList();
+                },
+                handleRestore(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = async function(e) {
+                        const content = e.target.result;
+                        if (await UI.showConfirm('Tem certeza? Todos os dados atuais serão perdidos.')) {
+                            if (Store.importData(content)) {
+                                UI.showToast('Backup restaurado com sucesso! Recarregando...', 'success');
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                UI.showToast('Erro ao restaurar backup. Arquivo inválido.', 'error');
+                            }
+                        }
+                        input.value = ''; // Reset input
+                    };
+                    reader.readAsText(file);
+                },
+                renderMaintList() {
+                    document.getElementById('maintList').innerHTML = Store.config.maintenance.map((m, i) => `
+                        <div class="flex justify-between items-center bg-gray-900 p-2 rounded border border-gray-700">
+                            <span class="text-xs text-white font-medium flex items-center gap-2">
+                                <i class="fa-solid ${Utils.getTaskIcon(m.name)} text-gray-400"></i>
+                                ${m.name} 
+                                <span class="text-water-400 ml-1 text-[10px] uppercase border border-water-900 px-1 rounded">${m.freq}</span>
+                            </span>
+                            <button onclick="Modules.References.delMaint(${i})" class="text-red-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                        </div>`).join('');
+                },
+                addMaint() {
+                    const name = document.getElementById('newMaintName').value;
+                    const freq = document.getElementById('newMaintFreq').value;
+                    Store.config.maintenance.push({ name, freq });
+                    this.renderMaintList();
+                },
+                delMaint(i) {
+                    Store.config.maintenance.splice(i, 1);
+                    this.renderMaintList();
+                },
+                save(silent = false) {
+                    const getVal = (id) => parseFloat(document.getElementById(id).value);
+                    const c = Store.config;
+                    const r = c.ranges;
+
+                    c.enableAlerts = document.getElementById('cEnableAlerts').checked;
+                    c.enableEmergencyAlerts = document.getElementById('cEnableEmergencyAlerts').checked;
+                    c.enablePhotoperiod = document.getElementById('cEnablePhoto').checked;
+                    c.autoBackupInterval = parseInt(document.getElementById('cAutoBackupInterval').value) || 0;
+                    c.tankName = document.getElementById('cName').value;
+                    c.tankOwner = document.getElementById('cOwner').value; // Save new owner field
+                    c.tankVolume = getVal('cVol');
+                    c.tankNotes = document.getElementById('cNotes').value;
+                    c.theme = document.getElementById('cTheme').value;
+                    c.maintenanceRefDay = parseInt(document.getElementById('cRefDay').value);
+                    c.maintenanceTime = document.getElementById('cRefTime').value;
+                    c.maintenanceStartDate = document.getElementById('cRefStart').value;
+                    c.photoperiod = {
+                        start: document.getElementById('cPhotoStart').value,
+                        end: document.getElementById('cPhotoEnd').value
+                    };
+
+                    r.temp = { min: getVal('cTempMin'), max: getVal('cTempMax'), minCrit: getVal('cTempMinCrit'), maxCrit: getVal('cTempMaxCrit') };
+                    r.ph = { min: getVal('cPhMin'), max: getVal('cPhMax'), minCrit: getVal('cPhMinCrit'), maxCrit: getVal('cPhMaxCrit') };
+                    r.tds = { min: getVal('cTdsMin'), max: getVal('cTdsMax') };
+                    r.ec = { min: getVal('cEcMin'), max: getVal('cEcMax') };
+                    r.gh = { min: getVal('cGhMin'), max: getVal('cGhMax') };
+                    r.kh = { min: getVal('cKhMin'), max: getVal('cKhMax') };
+                    r.nh3 = { max: getVal('cNh3Max'), maxCrit: getVal('cNh3MaxCrit') };
+                    r.no2 = { max: getVal('cNo2Max'), maxCrit: getVal('cNo2MaxCrit') };
+                    r.no3 = { max: getVal('cNo3Max'), maxCrit: getVal('cNo3MaxCrit') };
+
+                    Store.saveConfig();
+                    if (!silent) {
+                        UI.closeModal();
+                        UI.showToast('Configurações salvas!', 'success');
+                    }
+                },
+                updateSchedule() {
+                    this.save(true); // Save silently to update Store.config
+                    UI.showToast('Cronograma atualizado com sucesso!', 'success');
+                },
+                generateICS() {
+                    this.save(true); // Ensure latest config is used
+                    
+                    const year = 2026; // Or current year: new Date().getFullYear(); using 2026 as per context
+                    const events = [];
+                    const refDay = parseInt(Store.config.maintenanceRefDay);
+                    const maint = Store.config.maintenance;
+                    
+                    let d;
+                    let startDateObj;
+                    
+                    if (Store.config.maintenanceStartDate) {
+                        startDateObj = new Date(Store.config.maintenanceStartDate);
+                        d = new Date(year, 0, 1);
+                        while(d.getDay() !== refDay) d.setDate(d.getDate() + 1);
+                    } else {
+                        d = new Date(year, 0, 1);
+                        while(d.getDay() !== refDay) d.setDate(d.getDate() + 1);
+                        startDateObj = new Date(d);
+                    }
+
+                    const msPerWeek = 1000 * 60 * 60 * 24 * 7;
+
+                    while(d.getFullYear() === year) {
+                        const diffTime = d.getTime() - startDateObj.getTime();
+                        const weeksPassed = Math.round(diffTime / msPerWeek);
+                        const cycleIndex = weeksPassed + 1;
+
+                        const dailyTasks = [];
+                        
+                        maint.forEach(m => {
+                            let add = false;
+                            if(m.freq === 'diario') {
+                                add = true; 
+                            }
+                            if(m.freq === 'semanal') add = true;
+                            if(m.freq === 'quinzenal' && cycleIndex % 2 === 0) add = true; 
+                            if(m.freq === 'mensal' && cycleIndex % 4 === 0) add = true; 
+                            if(m.freq === 'trimestral' && cycleIndex % 13 === 0) add = true;
+                            if(m.freq === 'semestral' && cycleIndex % 26 === 0) add = true;
+                            
+                            if(add) dailyTasks.push(`[ ] ${m.name}`);
+                        });
+
+                        if(d >= startDateObj && dailyTasks.length > 0) {
+                            dailyTasks.push(`[ ] Atualizar na página do aqualog`);
+                            
+                            // Format Date for ICS: YYYYMMDD
+                            const dateStr = d.toISOString().replace(/[-:]/g, '').split('T')[0];
+                            const desc = dailyTasks.join('\\n');
+                            
+                            events.push(
+                                `BEGIN:VEVENT\n` +
+                                `DTSTART;VALUE=DATE:${dateStr}\n` +
+                                `SUMMARY:Manutenção do aquário: ${Store.config.tankName}\n` +
+                                `DESCRIPTION:${desc}\n` +
+                                `END:VEVENT`
+                            );
+                        }
+                        
+                        d.setDate(d.getDate()+7);
+                    }
+
+                    if (events.length === 0) return UI.showToast('Nenhum evento para gerar.', 'warning');
+
+                    const icsContent = 
+                        `BEGIN:VCALENDAR\n` +
+                        `VERSION:2.0\n` +
+                        `PRODID:-//AquaLog//Maintenance//PT-BR\n` +
+                        events.join('\n') + `\n` +
+                        `END:VCALENDAR`;
+
+                    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `manutencao_aqualog_${year}.ics`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    UI.showToast('Agenda gerada com sucesso!');
+                }
+            }
+        };
+
+        const UI = {
+            overlay: document.getElementById('modalOverlay'),
+            openModal(html) { this.overlay.innerHTML = html; this.overlay.classList.remove('hidden'); },
+            closeModal() { this.overlay.classList.add('hidden'); },
+            showToast(msg, type='success') {
+                const t = document.createElement('div');
+                t.className = `fixed bottom-4 right-4 px-4 py-2 rounded text-white shadow-lg fade-in ${type==='error'?'bg-red-600':'bg-blue-600'}`;
+                t.innerText = msg; document.body.appendChild(t);
+                setTimeout(() => t.remove(), 3000);
+            },
+            showConfirm(msg) {
+                return new Promise(r => {
+                    this.openModal(`
+                        <div class="bg-gray-800 p-6 rounded border border-gray-600 text-center">
+                            <p class="text-white mb-4">${msg}</p>
+                            <div class="flex justify-center gap-2">
+                                <button id="btnN" class="px-4 py-2 bg-gray-600 rounded text-white">Não</button>
+                                <button id="btnY" class="px-4 py-2 bg-red-600 rounded text-white">Sim</button>
+                            </div>
+                        </div>`);
+                    document.getElementById('btnN').onclick = () => { this.closeModal(); r(false); };
+                    document.getElementById('btnY').onclick = () => { this.closeModal(); r(true); };
+                });
+            },
+            openImageModal(src) {
+                this.openModal(`
+                    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90" onclick="UI.closeModal()">
+                        <div class="relative max-w-4xl max-h-[90vh]">
+                            <img src="${src}" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl border border-gray-800">
+                            <button class="absolute -top-10 right-0 text-white text-xl hover:text-gray-300"><i class="fa-solid fa-times"></i> Fechar</button>
+                        </div>
+                    </div>
+                `);
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+</body>
+</html>

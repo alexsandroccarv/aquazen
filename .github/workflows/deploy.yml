@@ -18,10 +18,10 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Trust remote host
-        run: ssh-keyscan -p 2222 ccarvalho.net >> ~/.ssh/known_hosts
+        run: ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Ensure remote directory exists
-        run: ssh -p 2222 ccarv978@ccarvalho.net "mkdir -p /home/ccarv978/public_html/labs/aquazen"
+        run: ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "mkdir -p '${{ secrets.SSH_PATH }}'"
 
       - name: Publish AquaLog
-        run: scp -P 2222 aqualog.html ccarv978@ccarvalho.net:/home/ccarv978/public_html/labs/aquazen/index.html
+        run: scp -P "${{ secrets.SSH_PORT }}" aqualog.html "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}/index.html"

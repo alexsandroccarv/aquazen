@@ -1138,13 +1138,13 @@
                                             <option>Alimentação Especial</option><option>Manutenção</option><option>Testes</option><option>Outros</option>
                                         </select>
                                     </div>
-                                    <div><label class="text-xs text-gray-400">Qtd</label><input type="number" id="invQty" value="1" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
-                                    <div><label class="text-xs text-gray-400">R$</label><input type="number" id="invVal" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
+                                    <div><label class="text-xs text-gray-400">Qtd</label><input type="number" id="invQty" value="1" min="0" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
+                                    <div><label class="text-xs text-gray-400">R$</label><input type="number" id="invVal" step="0.01" min="0" onchange="if(this.value < 0) this.value = 0;" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
                                     <div><label class="text-xs text-gray-400">Data</label><input type="date" id="invDate" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
                                     <div class="col-span-2 md:col-span-5"><label class="text-xs text-gray-400">Detalhes</label><input id="invDetails" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-white"></div>
                                     <div class="flex items-end"><button type="button" onclick="Modules.Inventory.save()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-1 rounded">Salvar</button></div>
                                 </form>
-                                <table class="w-full text-left text-xs text-gray-300"><thead class="bg-gray-800 uppercase"><tr><th class="p-2">St</th><th class="p-2">Item</th><th class="p-2">Tipo</th><th class="p-2">Qtd</th><th class="p-2">Valor</th><th class="p-2">Ações</th></tr></thead><tbody id="invBody"></tbody></table>
+                                <table class="w-full text-left text-xs text-gray-300"><thead class="bg-gray-800 uppercase"><tr><th class="p-2">St</th><th class="p-2">Item</th><th class="p-2">Tipo</th><th class="p-2">Qtd</th><th class="p-2">Valor</th><th class="p-2">Datas</th><th class="p-2">Ações</th></tr></thead><tbody id="invBody"></tbody></table>
                                 <div id="invSummary" class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4"></div>
                             </div>
                         </div>`;
@@ -1164,15 +1164,41 @@
                         active: true
                     };
                     if(!item.name) return UI.showToast('Nome obrigatório', 'error');
-                    
+
                     if(id) {
                         const idx = Store.inventory.findIndex(i => i.id == id);
-                        if(idx > -1) Store.inventory[idx] = { ...Store.inventory[idx], ...item };
+                        if(idx > -1) {
+                            // Preserva status ativo/inativo e data de saída: o form de edição
+                            // não tem esses campos, então não pode sobrescrevê-los.
+                            const existing = Store.inventory[idx];
+                            Store.inventory[idx] = { ...existing, ...item, active: existing.active, dateInactive: existing.dateInactive };
+                        }
                     } else {
                         item.id = crypto.randomUUID();
                         Store.inventory.push(item);
                     }
                     Store.saveInventory(); this.render(); document.getElementById('invForm').reset();
+                    document.getElementById('invId').value = '';
+                },
+                edit(id) {
+                    const item = Store.inventory.find(i => i.id == id);
+                    if(!item) return;
+                    document.getElementById('invId').value = item.id;
+                    document.getElementById('invName').value = item.name;
+                    document.getElementById('invType').value = item.type;
+                    document.getElementById('invQty').value = item.qty;
+                    document.getElementById('invVal').value = item.val;
+                    document.getElementById('invDate').value = item.date;
+                    document.getElementById('invDetails').value = item.details;
+                    document.getElementById('invName').focus();
+                },
+                duplicate(id) {
+                    const item = Store.inventory.find(i => i.id == id);
+                    if(!item) return;
+                    const copy = { ...item, id: crypto.randomUUID(), name: item.name + ' (Cópia)', active: true, dateInactive: null };
+                    Store.inventory.push(copy);
+                    Store.saveInventory(); this.render();
+                    UI.showToast('Item duplicado', 'success');
                 },
                 render() {
                     const tbody = document.getElementById('invBody');
@@ -1186,16 +1212,25 @@
                         totals[i.type] += val;
                         totals.Total += val;
                         
+                        const rowClass = i.active ? 'border-b border-gray-800 hover:bg-gray-800' : 'border-b border-gray-800 hover:bg-gray-800 opacity-50 grayscale';
+                        let dateStr = Utils.formatDate(i.date);
+                        if (!i.active && i.dateInactive) {
+                            dateStr += ` - <span class="text-red-400">${Utils.formatDate(i.dateInactive)}</span>`;
+                        }
+
                         tbody.innerHTML += `
-                            <tr class="border-b border-gray-800 hover:bg-gray-800">
+                            <tr class="${rowClass}">
                                 <td class="p-2">${i.active ? '<i class="fa-solid fa-check text-green-500"></i>' : '<i class="fa-solid fa-xmark text-red-500"></i>'}</td>
                                 <td class="p-2 font-bold">${Utils.escapeHtml(i.name)}<div class="text-[10px] text-gray-500">${Utils.escapeHtml(i.details)}</div></td>
                                 <td class="p-2"><i class="fa-solid ${Utils.getCategoryIcon(i.type)} mr-1"></i> ${i.type}</td>
                                 <td class="p-2">${i.qty}</td>
                                 <td class="p-2">R$ ${val.toFixed(2)}</td>
-                                <td class="p-2">
-                                    <button onclick="Modules.Inventory.toggle('${i.id}')"><i class="fa-solid fa-power-off text-gray-500 hover:text-white"></i></button>
-                                    <button onclick="Modules.Inventory.del('${i.id}')"><i class="fa-solid fa-trash text-gray-500 hover:text-red-500 ml-2"></i></button>
+                                <td class="p-2 text-[10px] whitespace-nowrap">${dateStr}</td>
+                                <td class="p-2 flex gap-2">
+                                    <button onclick="Modules.Inventory.toggle('${i.id}')" title="Ativar/Desativar"><i class="fa-solid fa-power-off text-gray-500 hover:text-white"></i></button>
+                                    <button onclick="Modules.Inventory.edit('${i.id}')" title="Editar"><i class="fa-solid fa-pen text-blue-400 hover:text-blue-300"></i></button>
+                                    <button onclick="Modules.Inventory.duplicate('${i.id}')" title="Duplicar"><i class="fa-solid fa-copy text-yellow-400 hover:text-yellow-300"></i></button>
+                                    <button onclick="Modules.Inventory.del('${i.id}')" title="Excluir"><i class="fa-solid fa-trash text-gray-500 hover:text-red-500"></i></button>
                                 </td>
                             </tr>`;
                     });
@@ -1206,7 +1241,13 @@
                             <div class="font-bold text-white">R$ ${v.toFixed(2)}</div>
                         </div>`).join('');
                 },
-                toggle(id) { const i = Store.inventory.find(x => x.id == id); if(i) { i.active = !i.active; Store.saveInventory(); this.render(); } },
+                toggle(id) {
+                    const i = Store.inventory.find(x => x.id == id);
+                    if(!i) return;
+                    i.active = !i.active;
+                    i.dateInactive = i.active ? null : new Date().toISOString().split('T')[0];
+                    Store.saveInventory(); this.render();
+                },
                 del(id) { Store.inventory = Store.inventory.filter(x => x.id != id); Store.saveInventory(); this.render(); }
             },
             Schedule: {

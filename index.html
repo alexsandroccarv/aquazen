@@ -140,6 +140,9 @@
             <a href="calculadora.html" target="_blank" rel="noopener" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
                 <i class="fa-solid fa-calculator text-orange-400 group-hover:text-orange-300"></i> Calculadora
             </a>
+            <button onclick="Modules.AI.open()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+                <i class="fa-solid fa-wand-magic-sparkles text-indigo-400 group-hover:text-indigo-300"></i> IA
+            </button>
             <button onclick="Modules.References.open()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
                 <i class="fa-solid fa-sliders text-emerald-400 group-hover:text-emerald-300"></i> Configuração
             </button>
@@ -326,6 +329,7 @@
                 enablePhotoperiod: true,
                 autoBackupInterval: 7,
                 lastBackupDate: null,
+                geminiKey: '',
                 ranges: {
                     temp: { min: 24, max: 28, minCrit: 22, maxCrit: 30 },
                     ph: { min: 6.6, max: 7.2, minCrit: 6.0, maxCrit: 7.8 },
@@ -390,6 +394,7 @@
                 if(this.config.tankId === undefined) this.config.tankId = '';
                 if(this.config.waterType === undefined) this.config.waterType = 'doce';
                 if(this.config.tankStyle === undefined) this.config.tankStyle = 'comunitario';
+                if(this.config.geminiKey === undefined) this.config.geminiKey = '';
             },
             deepMerge(target, source) {
                 for (const key in source) {
@@ -1473,6 +1478,14 @@
                         <div class="bg-gray-900 w-full max-w-3xl rounded-lg shadow-2xl border border-gray-700 fade-in flex flex-col max-h-[90vh]">
                             <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850"><h3 class="font-bold text-white">Configurações</h3><button onclick="UI.closeModal()"><i class="fa-solid fa-times text-gray-400"></i></button></div>
                             <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                                <section class="bg-indigo-900/10 p-3 rounded border border-indigo-900/30">
+                                    <h4 class="text-xs font-bold text-indigo-300 uppercase mb-2">Integração IA (Gemini)</h4>
+                                    <div class="flex gap-2">
+                                        <input type="password" id="cGeminiKey" value="${Utils.escapeHtml(c.geminiKey || '')}" placeholder="Cole sua API Key aqui" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white text-xs focus:border-indigo-500 focus:outline-none">
+                                        <button type="button" onclick="const el = document.getElementById('cGeminiKey'); el.type = el.type === 'password' ? 'text' : 'password';" class="px-3 bg-gray-700 border border-gray-600 rounded text-gray-300 hover:text-white"><i class="fa-solid fa-eye"></i></button>
+                                    </div>
+                                    <p class="text-[9px] text-gray-500 mt-1">Necessário para usar o Consultor Inteligente (menu "IA"). A chave fica salva só no seu navegador (localStorage).</p>
+                                </section>
                                 <section class="bg-blue-900/10 p-3 rounded border border-blue-900/30">
                                     <h4 class="text-xs font-bold text-blue-300 uppercase mb-2">Notificações e Recursos</h4>
                                     <div class="flex flex-col gap-2">
@@ -1576,6 +1589,8 @@
                     const getVal = (id) => parseFloat(document.getElementById(id).value);
                     const c = Store.config;
                     const r = c.ranges;
+
+                    c.geminiKey = document.getElementById('cGeminiKey').value;
 
                     c.enableAlerts = document.getElementById('cEnableAlerts').checked;
                     c.enableEmergencyAlerts = document.getElementById('cEnableEmergencyAlerts').checked;
@@ -1702,6 +1717,81 @@
                     link.click();
                     document.body.removeChild(link);
                     UI.showToast('Agenda gerada com sucesso!');
+                }
+            },
+            AI: {
+                open() {
+                    const html = `
+                        <div class="bg-gray-900 w-full max-w-2xl rounded-lg shadow-2xl border border-gray-700 fade-in p-6">
+                            <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
+                                <h3 class="text-xl font-bold text-white"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400 mr-2"></i> Consultor Inteligente</h3>
+                                <button onclick="UI.closeModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times text-lg"></i></button>
+                            </div>
+
+                            ${!Store.config.geminiKey ? `
+                            <div class="mb-4 p-3 bg-amber-900/30 border border-amber-800/50 rounded text-xs text-amber-200 flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Configure sua chave de API do Gemini em Configuração &gt; Sistema para usar este recurso.
+                            </div>` : ''}
+
+                            <div class="mb-4">
+                                <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Descreva sua dúvida ou problema</label>
+                                <textarea id="ai_prompt" rows="4" class="w-full bg-gray-950 border border-gray-600 rounded p-3 text-white text-sm focus:border-indigo-500 focus:outline-none transition resize-none placeholder-gray-700 leading-relaxed" placeholder="Ex: Meus peixes estão nadando de lado e ofegantes. O pH está 7.2 e Amônia 0.5. O que devo fazer?"></textarea>
+                            </div>
+
+                            <button onclick="Modules.AI.ask()" class="w-full h-10 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded flex items-center justify-center gap-2 transition shadow-lg">
+                                <i class="fa-brands fa-google"></i> Perguntar ao Gemini
+                            </button>
+
+                            <div id="ai_response" class="mt-6 p-4 bg-gray-800 rounded border border-gray-700 text-sm text-gray-300 hidden min-h-[4rem] whitespace-pre-wrap leading-relaxed shadow-inner"></div>
+                        </div>`;
+                    UI.openModal(html);
+                },
+                async ask() {
+                    const prompt = document.getElementById('ai_prompt').value;
+                    const responseDiv = document.getElementById('ai_response');
+
+                    if (!prompt) {
+                        UI.showToast('Digite sua dúvida antes de perguntar.', 'error');
+                        return;
+                    }
+
+                    responseDiv.innerHTML = '<div class="flex items-center gap-3 text-indigo-400 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin text-xl"></i> <span>Consultando o especialista...</span></div>';
+                    responseDiv.classList.remove('hidden');
+
+                    try {
+                        const result = await this.callGemini(prompt);
+                        // Formatação markdown simples -> HTML, escapando o texto antes para não
+                        // permitir que a resposta do modelo injete HTML/JS arbitrário na página.
+                        let formatted = Utils.escapeHtml(result)
+                            .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+                            .replace(/^\* /gm, '• ')
+                            .replace(/\n/g, '<br>');
+
+                        responseDiv.innerHTML = formatted;
+                    } catch (e) {
+                        responseDiv.innerHTML = `<span class="text-red-400 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> ${Utils.escapeHtml(e.message)}</span>`;
+                    }
+                },
+                async callGemini(userPrompt) {
+                    const key = Store.config.geminiKey;
+                    if (!key) throw new Error('Chave de API não configurada. Vá em Configurações > Sistema e adicione sua chave do Gemini.');
+
+                    const systemInstruction = 'Você é um especialista renomado em aquarismo doce e marinho. Forneça conselhos práticos, diagnósticos claros e curtos sobre saúde de peixes, plantas, algas e parâmetros da água. Seja direto, use listas quando possível e formatação markdown simples.';
+                    // A chave vai no header x-goog-api-key (suportado pela API do Gemini) em vez
+                    // da query string, para não deixá-la exposta em logs de rede/histórico do navegador.
+                    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent';
+                    const payload = {
+                        contents: [{ parts: [{ text: userPrompt }] }],
+                        systemInstruction: { parts: [{ text: systemInstruction }] }
+                    };
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error.message || 'Erro na API do Gemini');
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || 'Não consegui gerar uma resposta.';
                 }
             }
         };

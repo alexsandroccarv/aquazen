@@ -1023,13 +1023,52 @@
                     const phChart = renderLineChart(phData, {color: '#a855f7', unit: 'pH'});
                     const no3Chart = renderLineChart(no3Data, {color: '#ef4444', unit: 'ppm', min: 0});
 
-                    // Expenses
-                    let totalExpense = 0;
-                    Store.inventory.forEach(i => totalExpense += parseFloat(i.val||0));
+                    // Expenses & Fauna count
+                    let totalExpense = 0, totalFauna = 0;
+                    Store.inventory.forEach(i => {
+                        totalExpense += parseFloat(i.val||0);
+                        if (i.type === 'Fauna' && i.active) totalFauna += (parseInt(i.qty) || 0);
+                    });
+
+                    // --- Linha do Tempo (eventos de inventário: adição e saída/óbito) ---
+                    const timelineEvents = [];
+                    Store.inventory.forEach(i => {
+                        timelineEvents.push({ date: i.date, type: 'add', name: i.name, category: i.type, icon: Utils.getCategoryIcon(i.type) });
+                        if (i.dateInactive) {
+                            timelineEvents.push({ date: i.dateInactive, type: 'remove', name: i.name, category: i.type, icon: Utils.getCategoryIcon(i.type) });
+                        }
+                    });
+                    timelineEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                    const timelineHTML = timelineEvents.slice(0, 10).map(e => {
+                        const isAdd = e.type === 'add';
+                        const actionColor = isAdd ? 'text-green-400' : 'text-red-400';
+                        const actionIcon = isAdd ? 'fa-circle-plus' : 'fa-circle-minus';
+                        const actionText = isAdd ? 'Adicionado' : (e.category === 'Fauna' ? 'Óbito/Saída' : 'Desativado');
+                        const borderColor = isAdd ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500';
+                        return `
+                            <div class="bg-gray-900/50 p-3 rounded flex items-center justify-between ${borderColor} hover:bg-gray-800 transition border border-gray-800">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-8 h-8 rounded bg-gray-800 flex items-center justify-center text-gray-400 shrink-0 border border-gray-700">
+                                        <i class="fa-solid ${e.icon}"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-bold text-white truncate max-w-[120px] sm:max-w-xs">${Utils.escapeHtml(e.name)}</p>
+                                        <p class="text-[10px] text-gray-500 uppercase tracking-wide truncate">${e.category}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <div class="text-[10px] ${actionColor} font-bold flex items-center justify-end gap-1">
+                                        <span class="hidden sm:inline">${actionText}</span> <i class="fa-solid ${actionIcon}"></i>
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 font-mono">${Utils.formatDate(e.date)}</div>
+                                </div>
+                            </div>`;
+                    }).join('') || '<div class="text-center py-6 text-gray-500 text-xs italic">Nenhum item registrado no inventário ainda.</div>';
 
                     container.innerHTML = `
                         <!-- KPIs -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                             <div class="bg-gray-800 p-4 rounded border border-gray-700 flex items-center justify-between gap-4 flex-wrap">
                                 <div><p class="text-xs text-gray-400 uppercase">Temperatura Média</p><p class="text-2xl font-bold text-white">${avgTemp}°C</p></div>
                                 <i class="fa-solid fa-temperature-half text-orange-400 text-2xl shrink-0"></i>
@@ -1037,6 +1076,10 @@
                             <div class="bg-gray-800 p-4 rounded border border-gray-700 flex items-center justify-between gap-4 flex-wrap">
                                 <div><p class="text-xs text-gray-400 uppercase">Total Registros</p><p class="text-2xl font-bold text-white">${Store.logs.length}</p></div>
                                 <i class="fa-solid fa-list text-blue-400 text-2xl shrink-0"></i>
+                            </div>
+                            <div class="bg-gray-800 p-4 rounded border border-gray-700 flex items-center justify-between gap-4 flex-wrap">
+                                <div><p class="text-xs text-gray-400 uppercase">Total Fauna</p><p class="text-2xl font-bold text-white">${totalFauna}</p></div>
+                                <i class="fa-solid fa-fish text-indigo-400 text-2xl shrink-0"></i>
                             </div>
                             <div class="bg-gray-800 p-4 rounded border border-gray-700 flex items-center justify-between gap-4 flex-wrap">
                                 <div><p class="text-xs text-gray-400 uppercase">Patrimônio</p><p class="text-2xl font-bold text-green-400">R$ ${totalExpense.toFixed(2)}</p></div>
@@ -1048,19 +1091,27 @@
                             </div>
                         </div>
 
-                        <!-- Graphs Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="bg-gray-800 p-4 rounded border border-gray-700 flex flex-col">
-                                 <h4 class="text-sm font-bold text-orange-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-temperature-half"></i> Histórico de Temperatura</h4>
-                                 <div class="flex-1 w-full">${tempChart}</div>
+                        <!-- Gráficos + Linha do Tempo -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2 space-y-6">
+                                <div class="bg-gray-800 p-4 rounded border border-gray-700 flex flex-col">
+                                     <h4 class="text-sm font-bold text-orange-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-temperature-half"></i> Histórico de Temperatura</h4>
+                                     <div class="flex-1 w-full">${tempChart}</div>
+                                </div>
+                                <div class="bg-gray-800 p-4 rounded border border-gray-700 flex flex-col">
+                                     <h4 class="text-sm font-bold text-purple-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-vial"></i> Estabilidade de pH</h4>
+                                     <div class="flex-1 w-full">${phChart}</div>
+                                </div>
+                                <div class="bg-gray-800 p-4 rounded border border-gray-700 flex flex-col">
+                                     <h4 class="text-sm font-bold text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-biohazard"></i> Níveis de Nitrato (NO3) - Controle de TPA</h4>
+                                     <div class="flex-1 w-full">${no3Chart}</div>
+                                </div>
                             </div>
-                            <div class="bg-gray-800 p-4 rounded border border-gray-700 flex flex-col">
-                                 <h4 class="text-sm font-bold text-purple-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-vial"></i> Estabilidade de pH</h4>
-                                 <div class="flex-1 w-full">${phChart}</div>
-                            </div>
-                            <div class="bg-gray-800 p-4 rounded border border-gray-700 col-span-1 lg:col-span-2 flex flex-col">
-                                 <h4 class="text-sm font-bold text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-biohazard"></i> Níveis de Nitrato (NO3) - Controle de TPA</h4>
-                                 <div class="flex-1 w-full">${no3Chart}</div>
+                            <div class="lg:col-span-1">
+                                <div class="bg-gray-800 p-4 rounded border border-gray-700 h-full flex flex-col">
+                                    <h4 class="text-sm font-bold text-gray-300 mb-4 flex items-center gap-2 pb-2 border-b border-gray-700"><i class="fa-solid fa-clock-rotate-left text-blue-400"></i> Linha do Tempo (Inventário)</h4>
+                                    <div class="space-y-3 flex-1 overflow-y-auto max-h-[600px] pr-1">${timelineHTML}</div>
+                                </div>
                             </div>
                         </div>
                     `;

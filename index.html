@@ -185,6 +185,15 @@
                                 <div><label class="text-xs text-gray-400 cursor-help" title="Nitrato">NO3</label><input type="number" step="1" name="no3" min="0" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none placeholder-gray-500"></div>
                             </div>
                             <div class="grid grid-cols-3 gap-3">
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Fosfato">PO4</label><input type="number" step="0.1" name="po4" min="0" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-water-500 focus:outline-none placeholder-gray-500"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Ferro">Fe</label><input type="number" step="0.1" name="fe" min="0" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-water-500 focus:outline-none placeholder-gray-500"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Oxigênio Dissolvido">O2 (mg/L)</label><input type="number" step="0.5" name="o2" min="0" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-water-500 focus:outline-none placeholder-gray-500"></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Cobre">Cu</label><input type="number" step="0.01" name="cu" min="0" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-water-500 focus:outline-none placeholder-gray-500"></div>
+                                <div><label class="text-xs text-gray-400 cursor-help" title="Silicatos">SiO3</label><input type="number" step="0.1" name="sio3" min="0" oninput="App.validateLive(this)" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white focus:border-water-500 focus:outline-none placeholder-gray-500"></div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
                                 <div><label class="text-xs text-gray-400 cursor-help" title="Dureza Geral">GH</label><input type="number" step="0.5" name="gh" min="0" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
                                 <div><label class="text-xs text-gray-400 cursor-help" title="Dureza Carbonácea">KH</label><input type="number" step="0.5" name="kh" min="0" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
                                 <div><label class="text-xs text-gray-400 cursor-help" title="Condutividade Elétrica">EC (µS)</label><input type="number" step="1" name="ec" min="0" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-water-500 focus:outline-none"></div>
@@ -250,6 +259,7 @@
                                 <th class="p-3 border-b border-gray-700 text-center">Temp</th>
                                 <th class="p-3 border-b border-gray-700 text-center">pH</th>
                                 <th class="p-3 border-b border-gray-700 text-center hidden md:table-cell">N (ppm)</th>
+                                <th class="p-3 border-b border-gray-700 text-center hidden lg:table-cell">Nutrientes & Outros</th>
                                 <th class="p-3 border-b border-gray-700 text-center hidden lg:table-cell">TDS</th>
                                 <th class="p-3 border-b border-gray-700">Manutenção</th>
                                 <th class="p-3 border-b border-gray-700">Obs / Mídia</th>
@@ -322,7 +332,12 @@
                     no2: { max: 0.05, maxCrit: 1.0 },
                     no3: { max: 20, maxCrit: 50 },
                     gh: { min: 4, max: 12 },
-                    kh: { min: 3, max: 8 }
+                    kh: { min: 3, max: 8 },
+                    po4: { min: 0.1, max: 1.0, minCrit: 0, maxCrit: 2.0 },
+                    fe: { min: 0.1, max: 0.5, minCrit: 0, maxCrit: 1.0 },
+                    o2: { min: 6, max: 10, minCrit: 4, maxCrit: 20 },
+                    cu: { min: 0, max: 0, minCrit: 0, maxCrit: 0.05 },
+                    sio3: { min: 0, max: 1.0, minCrit: 0, maxCrit: 2.0 }
                 },
                 photoperiod: { start: '08:00', end: '16:00' },
                 // maintenance: stored as objects { name, freq }
@@ -507,8 +522,8 @@
                     return 'text-green-400';
                 };
 
-                if (['temp', 'ph', 'tds', 'ec', 'gh', 'kh'].includes(type)) return checkRange(r[type]);
-                if (['nh3', 'no2', 'no3'].includes(type)) return checkMax(r[type]);
+                if (['temp', 'ph', 'tds', 'ec', 'gh', 'kh', 'o2', 'po4', 'fe'].includes(type)) return checkRange(r[type]);
+                if (['nh3', 'no2', 'no3', 'cu', 'sio3'].includes(type)) return checkMax(r[type]);
                 return 'text-gray-300';
             },
             getTaskIcon(name) {
@@ -620,10 +635,10 @@
                 const num = parseFloat(val);
                 let status = 'good'; // good, warn, crit
 
-                if (['temp', 'ph'].includes(name)) {
+                if (['temp', 'ph', 'po4', 'fe', 'o2'].includes(name)) {
                     if (num < r.minCrit || num > r.maxCrit) status = 'crit';
                     else if (num < r.min || num > r.max) status = 'warn';
-                } else if (['nh3', 'no2', 'no3'].includes(name)) {
+                } else if (['nh3', 'no2', 'no3', 'cu', 'sio3'].includes(name)) {
                     if (num > r.maxCrit) status = 'crit';
                     else if (num > r.max) status = 'warn';
                 }
@@ -897,11 +912,21 @@
                          obsContent = `<div class="flex items-center justify-between"><span class="truncate max-w-[80px]">${obsContent}</span><button onclick="UI.openImageModal('${Utils.escapeJsString(log.photo)}')" class="text-pink-400 hover:text-pink-300"><i class="fa-solid fa-camera"></i></button></div>`;
                     }
 
+                    const nutrientList = [
+                        {val: log.po4, label: 'PO4'}, {val: log.fe, label: 'Fe'},
+                        {val: log.cu, label: 'Cu'}, {val: log.sio3, label: 'Si'},
+                        {val: log.o2, label: 'O2'}
+                    ].filter(n => n.val !== undefined && n.val !== '');
+                    const nutrientsHtml = nutrientList.length
+                        ? nutrientList.map(n => `<span class="text-[10px] mr-1 text-gray-400">${n.label}:<span class="text-white font-bold ml-0.5">${Utils.escapeHtml(n.val)}</span></span>`).join('')
+                        : '-';
+
                     tr.innerHTML = `
                         <td class="p-3 border-b border-gray-700 font-mono whitespace-nowrap">${Utils.formatDate(log.date)}</td>
                         <td class="p-3 border-b border-gray-700 text-center ${Utils.getParamColor(log.temp, 'temp')}">${log.temp || '-'}</td>
                         <td class="p-3 border-b border-gray-700 text-center ${Utils.getParamColor(log.ph, 'ph')}">${log.ph || '-'}</td>
                         <td class="p-3 border-b border-gray-700 text-center hidden md:table-cell text-xs"><span class="${Utils.getParamColor(log.nh3, 'nh3')}">NH3:${log.nh3||'-'}</span> <span class="${Utils.getParamColor(log.no2, 'no2')}">NO2:${log.no2||'-'}</span></td>
+                        <td class="p-3 border-b border-gray-700 text-center hidden lg:table-cell text-xs">${nutrientsHtml}</td>
                         <td class="p-3 border-b border-gray-700 text-center hidden lg:table-cell">${log.tds || '-'}</td>
                         <td class="p-3 border-b border-gray-700"><div class="flex flex-wrap gap-1">${badgesHtml}</div></td>
                         <td class="p-3 border-b border-gray-700 max-w-[120px]">${obsContent}</td>
@@ -1336,6 +1361,12 @@
                     const rangeInp = (id, min, max) => `<div class="range-group mt-1"><div class="flex gap-2"><div class="flex-1"><label class="text-[9px] uppercase text-green-400 font-bold">Ideal Min</label><input id="${id}Min" value="${min}" type="number" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center"></div><div class="flex-1"><label class="text-[9px] uppercase text-green-400 font-bold">Ideal Max</label><input id="${id}Max" value="${max}" type="number" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-center text-xs"></div></div></div>`;
                     const critInp = (id, min, max) => `<div class="range-group mt-1 border-red-900/30"><div class="flex gap-2"><div class="flex-1"><label class="text-[9px] uppercase text-red-400 font-bold">Crit Min</label><input id="${id}MinCrit" value="${min}" type="number" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-center text-xs"></div><div class="flex-1"><label class="text-[9px] uppercase text-red-400 font-bold">Crit Max</label><input id="${id}MaxCrit" value="${max}" type="number" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-center text-xs"></div></div></div>`;
                     const maxInp = (id, max, crit) => `<div class="range-group mt-1 flex gap-2"><div class="flex-1"><label class="text-[9px] uppercase text-green-400 font-bold">Max Ideal</label><input id="${id}Max" value="${max}" type="number" step="0.01" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-center text-xs"></div><div class="flex-1"><label class="text-[9px] uppercase text-red-400 font-bold">Critico ></label><input id="${id}MaxCrit" value="${crit}" type="number" step="0.01" class="w-full bg-gray-900 border border-gray-600 rounded p-1 text-white text-center text-xs"></div></div>`;
+                    const rangeBlock = (label, id, range) => `
+                        <div class="mb-2">
+                            <span class="text-xs text-gray-400 font-bold cursor-help" title="${label}">${id.toUpperCase()}</span>
+                            ${rangeInp('c' + id, range.min, range.max)}
+                            ${critInp('c' + id, range.minCrit, range.maxCrit)}
+                        </div>`;
 
                     UI.openModal(`
                         <div class="bg-gray-900 w-full max-w-3xl rounded-lg shadow-2xl border border-gray-700 fade-in flex flex-col max-h-[90vh]">
@@ -1357,6 +1388,17 @@
                                 <section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-3">Gerais</h4><div class="grid grid-cols-2 gap-4"><div class="col-span-2"><label class="text-xs text-gray-400">Nome do Tanque</label><input id="cName" value="${Utils.escapeHtml(c.tankName)}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div class="col-span-2"><label class="text-xs text-gray-400">Proprietário</label><input id="cOwner" value="${Utils.escapeHtml(c.tankOwner || '')}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Volume (L)</label><input id="cVol" type="number" value="${c.tankVolume}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Tema</label><select id="cTheme" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"><option value="default">Dark</option><option value="cyan">Ciano</option><option value="green">Verde</option><option value="light">Light</option></select></div><div class="col-span-2"><label class="text-xs text-gray-400">Notas</label><textarea id="cNotes" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white text-xs">${Utils.escapeHtml(c.tankNotes||'')}</textarea></div></div></section>
                                 <section id="secPhoto" class="${c.enablePhotoperiod ? '' : 'hidden'} transition-all"><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-3">Fotoperíodo</h4><div class="bg-gray-800/50 p-4 rounded border border-gray-700 flex flex-col gap-4"><div class="relative h-8 bg-gray-900 rounded-full overflow-hidden border border-gray-700"><div class="absolute inset-0 flex text-[8px] text-gray-600 justify-between px-2 items-center"><span>00:00</span><span>12:00</span><span>23:59</span></div><div id="photoBar" class="absolute top-0 bottom-0 bg-gradient-to-r from-yellow-600 to-yellow-400 opacity-80 transition-all duration-500 rounded-full"></div></div><div class="flex items-center justify-between gap-4"><div class="text-center"><label class="text-[10px] text-gray-500 uppercase block mb-1"><i class="fa-solid fa-sun text-yellow-500"></i> Ligar</label><input type="time" id="cPhotoStart" value="${c.photoperiod?.start || '08:00'}" onchange="document.getElementById('btnCalcPhoto').click()" class="bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center w-20"></div><div class="flex flex-col items-center"><span class="text-xs font-bold text-white" id="photoText">8h</span><span class="text-[9px] text-gray-500 uppercase">Duração</span></div><div class="text-center"><label class="text-[10px] text-gray-500 uppercase block mb-1"><i class="fa-solid fa-moon text-blue-400"></i> Desligar</label><input type="time" id="cPhotoEnd" value="${c.photoperiod?.end || '16:00'}" onchange="document.getElementById('btnCalcPhoto').click()" class="bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center w-20"></div></div><button id="btnCalcPhoto" class="hidden"></button></div></section>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6"><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Temperatura</h4>${rangeInp('cTemp', r.temp.min, r.temp.max)}${critInp('cTemp', r.temp.minCrit, r.temp.maxCrit)}</section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">pH</h4>${rangeInp('cPh', r.ph.min, r.ph.max)}${critInp('cPh', r.ph.minCrit, r.ph.maxCrit)}</section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Condutividade & Sólidos</h4><div class="mb-2"><span class="text-xs text-gray-400 cursor-help" title="Total de Sólidos Dissolvidos">TDS</span> ${rangeInp('cTds', r.tds.min, r.tds.max)}</div><div><span class="text-xs text-gray-400 cursor-help" title="Condutividade Elétrica">EC</span> ${rangeInp('cEc', r.ec.min, r.ec.max)}</div></section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Nitrogenados (Limites)</h4><div class="space-y-2"><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Amônia">NH3</span>${maxInp('cNh3', r.nh3.max, r.nh3.maxCrit)}</div><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Nitrito">NO2</span>${maxInp('cNo2', r.no2.max, r.no2.maxCrit)}</div><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Nitrato">NO3</span>${maxInp('cNo3', r.no3.max, r.no3.maxCrit)}</div></div></section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Dureza</h4><div class="mb-2"><span class="text-xs text-gray-400 cursor-help" title="Dureza Geral">GH</span> ${rangeInp('cGh', r.gh.min, r.gh.max)}</div><div><span class="text-xs text-gray-400 cursor-help" title="Dureza Carbonácea">KH</span> ${rangeInp('cKh', r.kh.min, r.kh.max)}</div></section></div>
+
+                                <section class="border-t border-gray-700 pt-4">
+                                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Nutrientes & Outros</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        ${rangeBlock('Fosfato', 'Po4', r.po4)}
+                                        ${rangeBlock('Ferro', 'Fe', r.fe)}
+                                        ${rangeBlock('Oxigênio Dissolvido', 'O2', r.o2)}
+                                        ${rangeBlock('Cobre', 'Cu', r.cu)}
+                                        ${rangeBlock('Silicatos', 'Sio3', r.sio3)}
+                                    </div>
+                                </section>
                                 <section class="bg-gray-800/50 p-4 rounded border border-gray-700"><h4 class="text-xs font-bold text-water-400 uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Plano de Manutenção</h4><div class="flex gap-2 mb-4 items-end"><div class="flex-1"><label class="text-[10px] text-gray-500 uppercase">Item</label><select id="newMaintName" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs">${CONFIG.maintenanceItemsList.map(i => `<option>${i}</option>`).join('')}</select></div><div class="w-32"><label class="text-[10px] text-gray-500 uppercase">Frequência</label><select id="newMaintFreq" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"><option value="diario">Diário</option><option value="semanal">Semanal</option><option value="quinzenal">Quinzenal</option><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option><option value="semestral">Semestral</option></select></div><button onclick="Modules.References.addMaint()" class="bg-green-600 hover:bg-green-500 px-4 py-1.5 rounded text-white font-bold transition"><i class="fa-solid fa-plus"></i></button></div><div class="space-y-1 mb-4" id="maintList"></div><div class="border-t border-gray-700 pt-3 mb-4"><h5 class="text-xs font-bold text-gray-400 mb-2">Manutenção Periódica</h5><div class="grid grid-cols-3 gap-2"><div><label class="text-[10px] text-gray-500 uppercase">Dia da Semana</label><select id="cRefDay" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"><option value="0">Domingo</option><option value="1">Segunda</option><option value="2">Terça</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option><option value="6">Sábado</option></select></div><div><label class="text-[10px] text-gray-500 uppercase">Horário</label><input type="time" id="cRefTime" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"></div><div><label class="text-[10px] text-gray-500 uppercase">Início do Ciclo</label><input type="date" id="cRefStart" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"></div></div></div><div class="flex gap-2"><button onclick="Modules.References.updateSchedule()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-xs"><i class="fa-solid fa-sync mr-1"></i> Atualizar Cronograma</button><button onclick="Modules.References.generateICS()" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded text-xs"><i class="fa-solid fa-calendar-alt mr-1"></i> Gerar Agenda (.ics)</button></div></section>
 
                                 <!-- Backup Section -->
@@ -1460,6 +1502,11 @@
                     r.nh3 = { max: getVal('cNh3Max'), maxCrit: getVal('cNh3MaxCrit') };
                     r.no2 = { max: getVal('cNo2Max'), maxCrit: getVal('cNo2MaxCrit') };
                     r.no3 = { max: getVal('cNo3Max'), maxCrit: getVal('cNo3MaxCrit') };
+                    r.po4 = { min: getVal('cPo4Min'), max: getVal('cPo4Max'), minCrit: getVal('cPo4MinCrit'), maxCrit: getVal('cPo4MaxCrit') };
+                    r.fe = { min: getVal('cFeMin'), max: getVal('cFeMax'), minCrit: getVal('cFeMinCrit'), maxCrit: getVal('cFeMaxCrit') };
+                    r.o2 = { min: getVal('cO2Min'), max: getVal('cO2Max'), minCrit: getVal('cO2MinCrit'), maxCrit: getVal('cO2MaxCrit') };
+                    r.cu = { min: getVal('cCuMin'), max: getVal('cCuMax'), minCrit: getVal('cCuMinCrit'), maxCrit: getVal('cCuMaxCrit') };
+                    r.sio3 = { min: getVal('cSio3Min'), max: getVal('cSio3Max'), minCrit: getVal('cSio3MinCrit'), maxCrit: getVal('cSio3MaxCrit') };
 
                     Store.saveConfig();
                     if (!silent) {

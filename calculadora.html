@@ -2336,21 +2336,50 @@
             }
         };
 
+        // ========== INTEGRAÇÃO COM O AQUAZEN (index.html) ==========
+        // Lê a config do app principal direto do localStorage (mesma origem).
+        // Usado para herdar o tema já escolhido lá e pré-preencher o volume do
+        // tanque nas calculadoras de dosagem, evitando digitar tudo de novo.
+        App.getAquazenConfig = function() {
+            try {
+                const raw = localStorage.getItem('aqua_config');
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                return null;
+            }
+        };
+
         // ========== UI (Interface) ==========
-        App.UI.setTheme = function(theme) {
+        App.UI.setTheme = function(theme, opts) {
             document.body.className = theme === 'dark' ? '' : `theme-${theme}`;
             App.Store.set('theme', theme);
-            
+
+            // Propaga a troca de tema de volta para o Aquazen (aqua_config), se existir,
+            // para as duas páginas ficarem sincronizadas independente de onde o usuário mexeu.
+            if (!opts || !opts.skipSync) {
+                const aquaConfig = App.getAquazenConfig();
+                if (aquaConfig) {
+                    aquaConfig.theme = theme === 'dark' ? 'default' : theme;
+                    try { localStorage.setItem('aqua_config', JSON.stringify(aquaConfig)); } catch (e) {}
+                }
+            }
+
             // Atualizar botões ativos
             document.querySelectorAll('.theme-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            document.getElementById(`theme-${theme}-btn`).classList.add('active');
+            const btn = document.getElementById(`theme-${theme}-btn`);
+            if (btn) btn.classList.add('active');
         };
 
         App.UI.loadConfig = function() {
-            const theme = App.Store.get('theme', 'dark');
-            App.UI.setTheme(theme);
+            const aquaConfig = App.getAquazenConfig();
+            const aquazenTheme = aquaConfig && aquaConfig.theme
+                ? (aquaConfig.theme === 'default' ? 'dark' : aquaConfig.theme)
+                : null;
+            const theme = aquazenTheme || App.Store.get('theme', 'dark');
+            // skipSync: acabamos de ler do Aquazen, não precisa regravar nele agora.
+            App.UI.setTheme(theme, { skipSync: true });
         };
 
         App.UI.switchSection = function(sectionId) {
@@ -3498,15 +3527,24 @@
         // ========== INICIALIZAÇÃO ==========
         window.addEventListener('DOMContentLoaded', function() {
             App.UI.loadConfig();
-            
+
             // Inicializar estado do seletor de volume
             if(document.getElementById('volumeType')) {
                 App.Modules.onVolumeTypeChange();
             }
-            
+
             // Inicializar instruções de teste
             if(document.getElementById('testSelect')) {
                 App.Modules.showTestInstructions();
+            }
+
+            // Pré-preenche o volume do tanque no Labcon com o valor já configurado
+            // no Aquazen, evitando digitar de novo o mesmo dado nas duas páginas.
+            const aquaConfig = App.getAquazenConfig();
+            const labcomVolumeInput = document.getElementById('labcomVolume');
+            if (aquaConfig && aquaConfig.tankVolume && labcomVolumeInput && !labcomVolumeInput.value) {
+                labcomVolumeInput.value = aquaConfig.tankVolume;
+                App.Modules.calcLabComTank();
             }
         });
     </script>

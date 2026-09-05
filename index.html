@@ -1793,6 +1793,87 @@
                     if (data.error) throw new Error(data.error.message || 'Erro na API do Gemini');
                     return data.candidates?.[0]?.content?.parts?.[0]?.text || 'Não consegui gerar uma resposta.';
                 }
+            },
+            Help: {
+                open() {
+                    const html = `
+                        <div class="bg-gray-900 w-full max-w-4xl max-h-[90vh] rounded-lg shadow-2xl flex flex-col border border-gray-700 fade-in">
+                            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850 rounded-t-lg shrink-0">
+                                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-circle-question text-teal-400 mr-2"></i> Manual de Ajuda</h3>
+                                <button onclick="UI.closeModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times text-lg"></i></button>
+                            </div>
+                            <div class="flex-1 overflow-y-auto p-6 text-gray-300 space-y-8">
+                                <section>
+                                    <h4 class="text-xl font-bold text-white mb-2">Bem-vindo ao Aquazen</h4>
+                                    <p>O Aquazen é uma ferramenta completa para gestão de aquários "Low Tech" (e High Tech também!), focada em manter o histórico de parâmetros, tarefas e custos organizados. Abaixo você encontra o guia de cada seção.</p>
+                                </section>
+
+                                <section class="border-l-4 border-water-400 pl-4">
+                                    <h5 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-chart-line text-water-400"></i> Dashboard</h5>
+                                    <p class="text-sm mb-2"><strong class="text-gray-400">Objetivo:</strong> Visão rápida da saúde do aquário.</p>
+                                    <ul class="list-disc list-inside text-sm space-y-1">
+                                        <li>KPIs de temperatura média, total de registros, total de fauna ativa, patrimônio investido e volume do tanque.</li>
+                                        <li>Gráficos de temperatura, pH e Nitrato para identificar tendências ao longo do tempo.</li>
+                                        <li>Linha do Tempo com as adições e saídas/óbitos mais recentes do Inventário.</li>
+                                    </ul>
+                                </section>
+
+                                <section class="border-l-4 border-blue-400 pl-4">
+                                    <h5 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-blue-400"></i> Registros</h5>
+                                    <p class="text-sm mb-2"><strong class="text-gray-400">Como preencher:</strong> Use o formulário lateral esquerdo para inserir dados diários.</p>
+                                    <ul class="list-disc list-inside text-sm space-y-1">
+                                        <li><strong>Parâmetros:</strong> pH, amônia, nitrito, nitrato, fosfato, ferro, oxigênio dissolvido, cobre, silicatos e outros. Os campos ficam coloridos (verde/amarelo/vermelho) conforme os limites configurados.</li>
+                                        <li><strong>Manutenção:</strong> marque as tarefas realizadas (TPA, poda, etc.) ou digite valores específicos.</li>
+                                        <li><strong>Foto:</strong> cole uma URL de imagem ou carregue um arquivo do dispositivo para acompanhar a evolução visual.</li>
+                                    </ul>
+                                </section>
+
+                                <section class="border-l-4 border-pink-400 pl-4">
+                                    <h5 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-images text-pink-400"></i> Galeria</h5>
+                                    <p class="text-sm"><strong class="text-gray-400">Resultado:</strong> linha do tempo visual gerada automaticamente a partir das fotos anexadas nos registros. Clique em uma imagem para ampliar.</p>
+                                </section>
+
+                                <section class="border-l-4 border-purple-400 pl-4">
+                                    <h5 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-regular fa-calendar-check text-purple-400"></i> Cronograma</h5>
+                                    <p class="text-sm mb-2"><strong class="text-gray-400">Objetivo:</strong> planejar manutenções futuras.</p>
+                                    <p class="text-sm">Baseado no "Plano de Manutenção" configurado, o sistema projeta quando realizar TPAs, podas e limpezas. Alterne entre visualização em Lista ou Calendário, e gere um arquivo .ics para importar na sua agenda.</p>
+                                </section>
+
+                                <section class="border-l-4 border-amber-400 pl-4">
+                                    <h5 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-boxes-stacked text-amber-400"></i> Inventário</h5>
+                                    <p class="text-sm mb-2"><strong class="text-gray-400">Forma de preenchimento:</strong> cadastre fauna, flora, equipamentos e insumos.</p>
+                                    <ul class="list-disc list-inside text-sm space-y-1">
+                                        <li>Controle de custos totais e por categoria.</li>
+                                        <li>Edite ou duplique um item existente, ou desative-o (registrando a data de saída/óbito) sem perder o histórico.</li>
+                                    </ul>
+                                </section>
+
+                                <section class="border-l-4 border-orange-400 pl-4">
+                                    <h5 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-calculator text-orange-400"></i> Calculadora</h5>
+                                    <p class="text-sm"><strong class="text-gray-400">Uso:</strong> abre a "Aquazen Calc" (<code class="text-xs bg-gray-800 px-1 rounded">calculadora.html</code>) em uma nova aba, com calculadoras e conversores para aquários de água doce, salgada e salobra — volume, substrato, CO2, dosagem de produtos Labcon e mais.</p>
+                                </section>
+
+                                <section class="border-l-4 border-indigo-400 pl-4">
+                                    <h5 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> IA</h5>
+                                    <p class="text-sm"><strong class="text-gray-400">Uso:</strong> descreva um problema (ex: sintomas dos peixes, parâmetros fora do normal) e receba um diagnóstico do Gemini. Exige uma chave de API do Gemini configurada em Configuração &gt; Sistema.</p>
+                                </section>
+
+                                <section class="border-l-4 border-emerald-400 pl-4">
+                                    <h5 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-sliders text-emerald-400"></i> Configuração</h5>
+                                    <p class="text-sm mb-2"><strong class="text-gray-400">Importante:</strong> defina aqui as regras do seu aquário.</p>
+                                    <ul class="list-disc list-inside text-sm space-y-1">
+                                        <li><strong>Ranges:</strong> limites ideais e críticos de cada parâmetro — controlam as cores dos alertas.</li>
+                                        <li><strong>Plano de Manutenção:</strong> crie sua rotina (ex: TPA semanal, limpeza de filtro mensal) para alimentar o Cronograma e os Alertas de Atraso.</li>
+                                        <li><strong>Backup:</strong> exporte seus dados em JSON para segurança ou migração entre dispositivos/navegadores.</li>
+                                    </ul>
+                                </section>
+                            </div>
+                            <div class="p-4 border-t border-gray-700 bg-gray-850 text-center">
+                                <p class="text-xs text-gray-500">Dica: passe o mouse sobre os rótulos do formulário para ver o significado das siglas (ex: GH, KH, TDS).</p>
+                            </div>
+                        </div>`;
+                    UI.openModal(html);
+                }
             }
         };
 

@@ -14,6 +14,24 @@ if [ -z "${SSH_HOST:-}" ] || [ -z "${SSH_USER:-}" ] || [ -z "${SSH_KEY:-}" ] || 
   exit 0
 fi
 
+# Remove espaços/quebras de linha nas pontas (erro comum ao colar o valor do
+# secret no GitHub) e prefixos/sufixos que não fazem parte do hostname.
+trim() {
+  local s="$1"
+  s="${s#"${s%%[![:space:]]*}"}"
+  s="${s%"${s##*[![:space:]]}"}"
+  printf '%s' "$s"
+}
+SSH_HOST="$(trim "$SSH_HOST")"
+SSH_USER="$(trim "$SSH_USER")"
+SSH_PORT="$(trim "${SSH_PORT:-}")"
+DEPLOY_PATH="$(trim "$DEPLOY_PATH")"
+SSH_HOST="${SSH_HOST#*://}"   # remove "ssh://", "http://" etc, se colado por engano
+SSH_HOST="${SSH_HOST%%/*}"    # remove qualquer caminho/barra final após o host
+SSH_HOST="${SSH_HOST%:*}"     # remove ":porta" se veio embutido no host
+
+echo "Diagnóstico (sem expor os valores): SSH_HOST tem ${#SSH_HOST} caractere(s), SSH_USER tem ${#SSH_USER} caractere(s)."
+
 PORT="${SSH_PORT:-22}"
 
 # Prepara a chave e o known_hosts

@@ -20,7 +20,7 @@ O objetivo do Aquazen é fornecer uma ferramenta acessível, sem necessidade de 
 
 * **Galeria de Evolução:** Linha do tempo visual construída a partir das fotos anexadas aos registros diários.
 
-* **Calculadora Integrada:** Ferramentas para cálculo de volume real, quantidade de substrato e estimativa de CO2.
+* **Calculadora Integrada (Aquazen Calc):** Página dedicada (`calculadora.html`, acessível pelo menu "Calculadora") com calculadoras e conversores para aquários de água doce, salgada e salobra — volume, substrato, CO2, dosagem e mais.
 
 * **Alertas Dinâmicos:** Notificações automáticas sobre atrasos em manutenções e níveis críticos de parâmetros químicos.
 
@@ -59,7 +59,7 @@ O Aquazen possui um motor de temas dinâmico que permite ao usuário alterar a a
 
 Para utilizar o Aquazen diretamente no seu computador, sem necessidade de internet (após o primeiro carregamento das CDNs) ou servidor:
 
-1. Baixe o arquivo `index.html`.
+1. Baixe os arquivos `index.html` e `calculadora.html` (mantenha-os na mesma pasta — o menu "Calculadora" do `index.html` abre o `calculadora.html`).
 
 2. Crie uma pasta dedicada para o projeto (ex: `MeusAquarios`).
 
@@ -73,7 +73,7 @@ Para utilizar o Aquazen diretamente no seu computador, sem necessidade de intern
 
 Para acessar seus dados de qualquer lugar (via celular ou outros computadores), recomenda-se hospedar o arquivo:
 
-1. Faça o upload do arquivo `index.html` para serviços de hospedagem estática gratuitos como GitHub Pages, Vercel ou Netlify.
+1. Faça o upload dos arquivos `index.html` e `calculadora.html` para serviços de hospedagem estática gratuitos como GitHub Pages, Vercel ou Netlify.
 
 2. **Diretório de Imagens:** Se for utilizar referências de imagens por URL (ao invés do upload direto que salva no navegador), certifique-se de criar a estrutura de pastas `/imagens` no seu repositório e subir os arquivos para lá.
 

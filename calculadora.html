@@ -1,0 +1,3509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aquazen Calc - Calculadora Profissional de Aquários</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwindConfig = {
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        :root {
+            /* Deep Ocean Theme (Default) */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --accent-primary: #06b6d4;
+            --accent-secondary: #0ea5e9;
+            --border-color: #475569;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        body.theme-cyan {
+            --bg-primary: #0c2d3e;
+            --bg-secondary: #164e63;
+            --bg-tertiary: #1e7e8f;
+            --text-primary: #e0f2fe;
+            --text-secondary: #a5d8dd;
+            --accent-primary: #00d9ff;
+            --accent-secondary: #06b6d4;
+            --border-color: #0e7490;
+            --success-color: #06d6a0;
+            --warning-color: #fbbf24;
+            --danger-color: #f87171;
+        }
+
+        body.theme-green {
+            --bg-primary: #0f2818;
+            --bg-secondary: #1a3a2a;
+            --bg-tertiary: #2d5a3d;
+            --text-primary: #e8f5e9;
+            --text-secondary: #a8d5ba;
+            --accent-primary: #4ade80;
+            --accent-secondary: #22c55e;
+            --border-color: #3f6b4f;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        body.theme-light {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #e2e8f0;
+            --bg-tertiary: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --accent-primary: #0284c7;
+            --accent-secondary: #0ea5e9;
+            --border-color: #94a3b8;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-primary);
+            color: var(--bg-primary);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
+        }
+
+        .input-field {
+            background-color: var(--bg-tertiary);
+            border: 2px dashed var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .result-box {
+            background-color: var(--bg-tertiary);
+            border-left: 4px solid var(--accent-primary);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .status-ideal {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .status-warning {
+            color: var(--warning-color);
+            font-weight: 600;
+        }
+
+        .status-danger {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-tab.active {
+            border-bottom-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .nav-tab:hover {
+            color: var(--accent-primary);
+        }
+
+        .category-section {
+            display: none;
+        }
+
+        .category-section.active {
+            display: block;
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .theme-btn {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            border: 3px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+            border-color: var(--accent-primary);
+        }
+
+        .theme-btn.active {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px var(--accent-primary);
+        }
+
+        #theme-dark-btn {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        #theme-cyan-btn {
+            background: linear-gradient(135deg, #164e63 0%, #0c2d3e 100%);
+        }
+
+        #theme-green-btn {
+            background: linear-gradient(135deg, #1a3a2a 0%, #0f2818 100%);
+        }
+
+        #theme-light-btn {
+            background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 100%);
+            border-color: var(--text-secondary);
+        }
+
+        .svg-container {
+            background-color: var(--bg-tertiary);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .footer-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        a:hover {
+            color: var(--accent-secondary);
+            text-decoration: underline;
+        }
+
+        /* Header Styles */
+        header {
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+            flex-shrink: 0;
+            background-color: #111827;
+            border-bottom: 1px solid #374151;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Header Line 1 */
+        .header-line-1 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .header-logo-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-logo {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.375rem;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+
+        .header-logo i {
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-app-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: white;
+            line-height: 1;
+        }
+
+        .header-separator {
+            font-size: 1.25rem;
+            color: #4b5563;
+            font-weight: 300;
+        }
+
+        .header-tank-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: #06b6d4;
+            line-height: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 300px;
+        }
+
+        /* Header Line 2 - Navigation */
+        .header-line-2 {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: rgba(31, 41, 55, 0.3);
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+        }
+
+        .header-line-2::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Navigation Buttons */
+        .nav-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.875rem;
+            border-radius: 0.375rem;
+            border: 1px solid #374151;
+            background-color: #1f2937;
+            color: #d1d5db;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-button:hover {
+            background-color: #374151;
+        }
+
+        .nav-button i {
+            font-size: 0.875rem;
+            transition: color 0.2s ease;
+        }
+
+        /* Icon Colors for Categories */
+        .nav-button.gerais i { color: #f59e0b; }
+        .nav-button.gerais:hover i { color: #fbbf24; }
+
+        .nav-button.agua-doce i { color: #10b981; }
+        .nav-button.agua-doce:hover i { color: #34d399; }
+
+        .nav-button.agua-salgada i { color: #06b6d4; }
+        .nav-button.agua-salgada:hover i { color: #22d3ee; }
+
+        .nav-button.agua-salobra i { color: #8b5cf6; }
+        .nav-button.agua-salobra:hover i { color: #a78bfa; }
+
+        /* Nova Classe Labcon (Cor ajustada para Laranja/Goldfish) */
+        .nav-button.labcom i { color: #f59e0b; }
+        .nav-button.labcom:hover i { color: #fbbf24; }
+
+        .nav-button.conversores i { color: #ec4899; }
+        .nav-button.conversores:hover i { color: #f472b6; }
+
+        .nav-button.configuracao i { color: #6366f1; }
+        .nav-button.configuracao:hover i { color: #818cf8; }
+
+        .nav-button.ajuda i { color: #14b8a6; }
+        .nav-button.ajuda:hover i { color: #2dd4bf; }
+
+        /* Active State */
+        .nav-button.active {
+            background-color: #06b6d4;
+            border-color: #06b6d4;
+            color: white;
+        }
+
+        .nav-button.active i {
+            color: white;
+        }
+
+        .label-badge {
+            display: inline-block;
+            background-color: var(--danger-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: 0.5rem;
+        }
+
+        /* Estilos para o Box de Informação (Help) */
+        .info-btn {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            margin-left: auto; /* Empurra para a direita se estiver em flex */
+            opacity: 0.7;
+        }
+
+        .info-btn:hover {
+            color: var(--accent-primary);
+            opacity: 1;
+        }
+
+        .info-box {
+            display: none; /* Oculto por padrão */
+            background-color: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid var(--accent-secondary);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            font-size: 0.9rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .info-box p {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .formula-tag {
+            font-family: 'Courier New', monospace;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 0.1rem 0.4rem;
+            border-radius: 0.25rem;
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .ref-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.8rem;
+            color: var(--accent-primary);
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+        
+        .ref-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        /* Estilos para o Modal de Detalhes do Produto */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--danger-color);
+        }
+
+        .product-help-btn {
+            background: none;
+            border: none;
+            color: var(--accent-secondary);
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            transition: color 0.2s;
+            opacity: 0.7;
+        }
+
+        .product-help-btn:hover {
+            color: var(--accent-primary);
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <!-- Header -->
+    <header>
+        <!-- Linha 1: Identidade e Informação -->
+        <div class="header-line-1">
+            <!-- Logo e Título -->
+            <div class="header-logo-group">
+                <div class="header-logo">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="header-title-group">
+                    <span class="header-app-name">Aquazen Calc</span>
+                </div>
+            </div>
+            <a href="index.html" style="color: var(--text-secondary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-secondary)'">
+                <i class="fas fa-arrow-left"></i> Voltar ao Aquazen
+            </a>
+        </div>
+
+        <!-- Linha 2: Navegação -->
+        <div class="header-line-2">
+            <!-- Botões de Categoria -->
+            <button class="nav-button gerais active" data-category="gerais">
+                <i class="fas fa-layer-group"></i>
+                <span>Gerais</span>
+            </button>
+            <button class="nav-button agua-doce" data-category="agua-doce">
+                <i class="fas fa-droplet"></i>
+                <span>Água Doce</span>
+            </button>
+            <button class="nav-button agua-salgada" data-category="agua-salgada">
+                <i class="fas fa-water"></i>
+                <span>Água Salgada</span>
+            </button>
+            <button class="nav-button agua-salobra" data-category="agua-salobra">
+                <i class="fas fa-wave-square"></i>
+                <span>Água Salobra</span>
+            </button>
+            <button class="nav-button labcom" data-category="labcom">
+                <i class="fas fa-fish"></i>
+                <span>Labcon</span>
+            </button>
+            <div style="width: 1px; height: 1.5rem; background-color: #374151; margin: 0 0.25rem;"></div>
+            <button class="nav-button conversores" data-section="conversores">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Conversores</span>
+            </button>
+            <button class="nav-button ajuda" data-section="ajuda">
+                <i class="fas fa-question-circle"></i>
+                <span>Ajuda</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- SEÇÃO CALCULADORA -->
+        <!-- CATEGORIA: GERAIS -->
+            <section id="gerais" class="category-section active">
+                <div class="category-title">
+                    <i class="fas fa-list"></i> Cálculos Gerais
+                </div>
+
+                <div class="calc-grid">
+                    <!-- Cálculo de Volume (REESCRITO) -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-cube" style="color: var(--accent-primary);"></i>
+                                Cálculo de Volume
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-volume')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="info-volume" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">V = (C × L × A) ÷ 1000</span></p>
+                            <p>Calcula o volume bruto em litros com base nas dimensões em centímetros. Para formatos complexos, utiliza-se a geometria espacial correspondente (ex: volume do cilindro).</p>
+                            <a href="https://pt.wikipedia.org/wiki/Volume" target="_blank" class="ref-link">
+                                <i class="fas fa-external-link-alt"></i> Ref: Geometria Espacial (Wikipedia)
+                            </a>
+                        </div>
+                        
+                        <label class="block mb-4">
+                            <span class="text-sm font-semibold mb-1 block">Formato do Aquário</span>
+                            <select id="volumeType" class="input-field w-full" onchange="App.Modules.onVolumeTypeChange()">
+                                <option value="retangular">Retangular / Cubo</option>
+                                <option value="cilindrico">Cilíndrico</option>
+                                <option value="bowfront">Bow Front (Curvo)</option>
+                                <option value="hexagonal">Hexagonal</option>
+                                <option value="globo">Globo / Esférico</option>
+                            </select>
+                        </label>
+
+                        <!-- Área da Imagem Esquemática -->
+                        <div class="svg-container" id="volumeSVG" style="background-color: #1e293b; border: 1px solid var(--border-color); padding: 2rem;">
+                            <!-- O SVG será injetado aqui -->
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" id="volumeInputsContainer">
+                            <!-- Inputs Dinâmicos: Serão exibidos/ocultados via JS -->
+                            
+                            <!-- Comprimento -->
+                            <div id="field-comprimento">
+                                <label class="text-sm font-semibold mb-1 block">Comprimento (cm)</label>
+                                <input type="number" id="volComprimento" placeholder="Ex: 80" class="input-field w-full">
+                            </div>
+
+                            <!-- Largura -->
+                            <div id="field-largura">
+                                <label class="text-sm font-semibold mb-1 block">Largura (cm)</label>
+                                <input type="number" id="volLargura" placeholder="Ex: 40" class="input-field w-full">
+                            </div>
+
+                            <!-- Diâmetro -->
+                            <div id="field-diametro" class="hidden">
+                                <label class="text-sm font-semibold mb-1 block">Diâmetro (cm)</label>
+                                <input type="number" id="volDiametro" placeholder="Ex: 50" class="input-field w-full">
+                            </div>
+
+                            <!-- Lado (Hexagonal) -->
+                            <div id="field-lado" class="hidden">
+                                <label class="text-sm font-semibold mb-1 block">Lado (cm)</label>
+                                <input type="number" id="volLado" placeholder="Ex: 30" class="input-field w-full">
+                            </div>
+
+                            <!-- Altura (Comum a maioria) -->
+                            <div id="field-altura">
+                                <label class="text-sm font-semibold mb-1 block">Altura da Água (cm)</label>
+                                <input type="number" id="volAltura" placeholder="Ex: 50" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcVolume()">
+                            <i class="fas fa-calculator"></i> Calcular Volume
+                        </button>
+
+                        <div id="volumeResult" class="result-box" style="display: none;">
+                            <p>Volume Total: <strong id="volumeResultValue">0</strong> Litros</p>
+                            <p>Galões (US): <strong id="volumeGaloes">0</strong> gal</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Peso Total -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-weight" style="color: var(--accent-primary);"></i>
+                                Peso Total do Sistema
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-peso')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-peso" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">P_total = P_vidro + (V_água × 1) + P_hardscape</span></p>
+                            <p>Estima a carga total sobre o piso. Considera-se a densidade da água doce como ~1kg/L. Rochas e areia aumentam significativamente a carga estática.</p>
+                            <a href="https://www.brasilreef.com/viewtopic.php?t=14667" target="_blank" class="ref-link">
+                                <i class="fas fa-external-link-alt"></i> Ref: Cálculo de Peso e Lajes (Brasil Reef)
+                            </a>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="filtroVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Ciclos/Hora</label>
+                                <input type="number" id="filtroCiclos" placeholder="Ex: 4" value="4" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcFiltragem()">
+                            <i class="fas fa-calculator"></i> Calcular Filtragem
+                        </button>
+
+                        <div id="filtroResult" class="result-box" style="display: none;">
+                            <p>Vazão Mínima: <strong id="filtroVazao">0</strong> L/h</p>
+                            <p>Vazão por Dia: <strong id="filtroDia">0</strong> L/dia</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Aquecedor/Chiller -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-thermometer-half" style="color: var(--accent-primary);"></i>
+                                Potência de Aquecedor/Chiller
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-aquecedor')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-aquecedor" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">W = Vol × ΔT × k</span></p>
+                            <p>Onde ΔT é a diferença de temperatura e k é o coeficiente de perda térmica (aprox. 0.5 a 1.0 dependendo do ambiente). A regra prática é 1 Watt por Litro.</p>
+                            <a href="https://www.thesprucepets.com/aquarium-heater-size-guide-1381033" target="_blank" class="ref-link">
+                                <i class="fas fa-external-link-alt"></i> Ref: Guia de Dimensionamento (The Spruce Pets)
+                            </a>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="aquecVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Temp. Atual (°C)</label>
+                                <input type="number" id="aquecAtual" placeholder="Ex: 20" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Temp. Desejada (°C)</label>
+                                <input type="number" id="aquecDesejada" placeholder="Ex: 26" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcAquecedor()">
+                            <i class="fas fa-calculator"></i> Calcular Potência
+                        </button>
+
+                        <div id="aquecResult" class="result-box" style="display: none;">
+                            <p>Potência Recomendada: <strong id="aquecPotencia">0</strong> W</p>
+                            <p style="font-size: 0.9rem;" style="color: var(--text-secondary);">Adicione 20% para maior eficiência</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Iluminação -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-lightbulb" style="color: var(--accent-primary);"></i>
+                                Potência de Iluminação
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-ilum')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-ilum" class="info-box">
+                            <p><strong>Regra Prática:</strong> <span class="formula-tag">Lúmens = Vol × Nível_Exigência</span></p>
+                            <p>High Tech exige ~60-90 lúmens/L. Low Tech ~20-40 lúmens/L. A regra de Watts/L é obsoleta para LEDs, mas usada como referência antiga.</p>
+                            <a href="https://tropica.com/en/guide/make-your-aquarium-a-success/light/" target="_blank" class="ref-link">
+                                <i class="fas fa-external-link-alt"></i> Ref: Tropica Aquarium Plants
+                            </a>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="ilumVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Tipo de Aquário</label>
+                                <select id="ilumTipo" class="input-field w-full">
+                                    <option value="lowtech">Low Tech (0.25-0.5 W/L)</option>
+                                    <option value="mediumtech">Medium Tech (0.5-1 W/L)</option>
+                                    <option value="hightech">High Tech (1-1.5 W/L)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcIluminacao()">
+                            <i class="fas fa-calculator"></i> Calcular Iluminação
+                        </button>
+
+                        <div id="ilumResult" class="result-box" style="display: none;">
+                            <p>Potência: <strong id="ilumWatts">0</strong> - <strong id="ilumWattsMax">0</strong> Watts</p>
+                            <p>Lúmens: <strong id="ilumLumens">0</strong> - <strong id="ilumLumensMax">0</strong> lm</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Substrato -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-layer-group" style="color: var(--accent-primary);"></i>
+                                Quantidade de Substrato
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-substrato')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-substrato" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">Peso = (C × L × Alt_Camada ÷ 1000) × Densidade</span></p>
+                            <p>Calcula-se o volume da camada de substrato e multiplica-se pela densidade aparente do material (Areia ~1.5kg/L, Solo Fértil ~1.0kg/L).</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Comprimento (cm)</label>
+                                <input type="number" id="substratoComprimento" placeholder="Ex: 80" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Largura (cm)</label>
+                                <input type="number" id="substratoLargura" placeholder="Ex: 40" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Altura (cm)</label>
+                                <input type="number" id="substratoAltura" placeholder="Ex: 5" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-semibold mb-1 block">Densidade (kg/L)</label>
+                            <input type="number" id="substratoDensidade" placeholder="Ex: 1.5" value="1.5" class="input-field w-full mb-2">
+                            <p class="text-xs mb-2" style="color: var(--text-secondary);">Areia: 1.5 | Cascalho: 1.6 | Solo Fértil: 1.0</p>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcSubstrato()">
+                            <i class="fas fa-calculator"></i> Calcular Substrato
+                        </button>
+
+                        <div id="substratoResult" class="result-box" style="display: none;">
+                            <p>Volume: <strong id="substratoVolume">0</strong> L</p>
+                            <p>Peso: <strong id="substratoPeso">0</strong> kg</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Troca de Água -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-water" style="color: var(--accent-primary);"></i>
+                                Troca de Água
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-tpa')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-tpa" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">V_tpa = V_total × (Percentual ÷ 100)</span></p>
+                            <p>A TPA (Troca Parcial de Água) serve para exportar nutrientes em excesso e repor minerais. A regra geral é 20-30% semanalmente.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="trocaVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Percentual (%)</label>
+                                <input type="number" id="trocaPercentual" placeholder="Ex: 30" value="30" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcTroca()">
+                            <i class="fas fa-calculator"></i> Calcular Troca
+                        </button>
+
+                        <div id="trocaResult" class="result-box" style="display: none;">
+                            <p>Volume por Troca: <strong id="trocaVolumeTroca">0</strong> L</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Dosagem -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-flask" style="color: var(--accent-primary);"></i>
+                                Dosagem de Suplementos
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-dosagem')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-dosagem" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">Dose_Total = Volume × Dose_Unitaria</span></p>
+                            <p>Cálculo simples de multiplicação escalar para ajustar a quantidade de produto ao volume do tanque.</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="dosageVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Dose Recomendada</label>
+                                <input type="number" id="dosageRecomendada" placeholder="Ex: 1" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Unidade</label>
+                                <select id="dosageUnidade" class="input-field w-full">
+                                    <option value="ml">ml/L</option>
+                                    <option value="gotas">gotas/L</option>
+                                    <option value="g">g/L</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcDosagem()">
+                            <i class="fas fa-calculator"></i> Calcular Dosagem
+                        </button>
+
+                        <div id="dosageResult" class="result-box" style="display: none;">
+                            <p>Dosagem Total: <strong id="dosageTotalValue">0</strong> <span id="dosageUnidadeResult">ml</span></p>
+                        </div>
+                    </div>
+
+                    <!-- NOVO: Estimativa de Custo Energético -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-bolt" style="color: var(--accent-primary);"></i>
+                                Estimativa de Custo Energético
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-energia')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-energia" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">Custo = (W × h × 30 ÷ 1000) × Tarifa</span></p>
+                            <p>Calcula o impacto mensal na conta de luz. Verifique sua conta para saber o valor exato do kWh na sua região (média Brasil ~R$ 0,85).</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Potência (W)</label>
+                                <input type="number" id="energyWatts" placeholder="Ex: 300" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Horas/Dia</label>
+                                <input type="number" id="energyHours" placeholder="Ex: 8" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Tarifa (R$/kWh)</label>
+                                <input type="number" id="energyRate" placeholder="Ex: 0.85" value="0.85" step="0.01" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcEnergia()">
+                            <i class="fas fa-calculator"></i> Calcular Custo
+                        </button>
+
+                        <div id="energyResult" class="result-box" style="display: none;">
+                            <p>Consumo Mensal: <strong id="energyKwh">0</strong> kWh</p>
+                            <p>Custo Mensal: R$ <strong id="energyCost">0.00</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- NOVO: Assistente de Aquascaping -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-image" style="color: var(--accent-primary);"></i>
+                                Assistente de Aquascaping
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-scape')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-scape" class="info-box">
+                            <p><strong>Conceito:</strong> <span class="formula-tag">Regra de Ouro (Proporção Áurea)</span></p>
+                            <p>A proporção 1:1.618 cria layouts esteticamente agradáveis. Os pontos focais indicam onde posicionar o tronco ou rocha principal.</p>
+                            <a href="https://en.wikipedia.org/wiki/Golden_ratio" target="_blank" class="ref-link">
+                                <i class="fas fa-external-link-alt"></i> Ref: Proporção Áurea
+                            </a>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-sm font-semibold mb-1 block">Comprimento do Aquário (cm)</label>
+                            <input type="number" id="scapeLength" placeholder="Ex: 60" class="input-field w-full">
+                        </div>
+
+                        <div class="svg-container" id="scapeSVG" style="background-color: #1e293b; border: 1px solid var(--border-color); padding: 1rem; min-height: 150px;">
+                            <p style="color: var(--text-secondary); font-size: 0.8rem;">Insira o comprimento para visualizar</p>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcAquascaping()">
+                            <i class="fas fa-calculator"></i> Calcular Pontos Focais
+                        </button>
+
+                        <div id="scapeResult" class="result-box" style="display: none;">
+                            <p>Ponto Focal Esquerdo: <strong id="scapeLeft">0</strong> cm</p>
+                            <p>Ponto Focal Direito: <strong id="scapeRight">0</strong> cm</p>
+                            <p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-secondary);">Medidos a partir das bordas respectivas.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        <!-- CATEGORIA: ÁGUA DOCE -->
+            <section id="agua-doce" class="category-section">
+                <div class="category-title">
+                    <i class="fas fa-droplet"></i> Cálculos para Água Doce
+                </div>
+
+                <div class="calc-grid">
+                    <!-- NOVO: Toxicidade da Amônia -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-skull-crossbones" style="color: var(--accent-primary);"></i>
+                                Toxicidade da Amônia
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-amonia')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-amonia" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">Equação de Emerson (1975)</span></p>
+                            <p>Calcula a fração de Amônia Livre (NH3 - Tóxica) a partir da Amônia Total (NH3+NH4+), considerando pH e Temperatura. Testes comuns medem o total.</p>
+                            <span class="ref-link">
+                                <i class="fas fa-book"></i> Ref: Emerson et al. (1975)
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Amônia Total (ppm)</label>
+                                <input type="number" id="amoniaTotal" placeholder="Ex: 1.0" step="0.1" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">pH</label>
+                                <input type="number" id="amoniaPh" placeholder="Ex: 7.0" step="0.1" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Temp. (°C)</label>
+                                <input type="number" id="amoniaTemp" placeholder="Ex: 26" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcAmonia()">
+                            <i class="fas fa-calculator"></i> Calcular Toxicidade
+                        </button>
+
+                        <div id="amoniaResult" class="result-box" style="display: none;">
+                            <p>Amônia Tóxica (NH3): <strong id="amoniaToxic">0</strong> ppm</p>
+                            <p>Status: <strong id="amoniaStatus">-</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de CO₂ -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-wind" style="color: var(--accent-primary);"></i>
+                                Concentração de CO₂
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-co2')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-co2" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">CO2 (ppm) = 3 × KH × 10^(7-pH)</span></p>
+                            <p>Baseada na equação de Henderson-Hasselbalch. Assume que a única fonte de acidez é o Ácido Carbônico e a única fonte de alcalinidade são Bicarbonatos.</p>
+                            <a href="https://barrreport.com/" target="_blank" class="ref-link">
+                                <i class="fas fa-external-link-alt"></i> Ref: The Barr Report (Tom Barr)
+                            </a>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">pH</label>
+                                <input type="number" id="co2pH" placeholder="Ex: 6.8" step="0.1" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">KH (°dKH)</label>
+                                <input type="number" id="co2KH" placeholder="Ex: 4" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcCO2()">
+                            <i class="fas fa-calculator"></i> Calcular CO₂
+                        </button>
+
+                        <div id="co2Result" class="result-box" style="display: none;">
+                            <p>Concentração: <strong id="co2Value">0</strong> mg/L</p>
+                            <p>Status: <strong id="co2Status">-</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de GH/KH -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-flask-vial" style="color: var(--accent-primary);"></i>
+                                Mistura de Águas (GH/KH)
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-mistura')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-mistura" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">C_final = (C1×V1 + C2×V2) ÷ (V1 + V2)</span></p>
+                            <p>Cálculo de diluição ponderada. Útil para misturar água de torneira com água de Osmose Reversa (RO) para atingir dureza específica.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume Torneira (L)</label>
+                                <input type="number" id="mixtVolTorneira" placeholder="Ex: 70" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume Osmose (L)</label>
+                                <input type="number" id="mixtVolOsmose" placeholder="Ex: 30" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">GH Torneira (°dGH)</label>
+                                <input type="number" id="mixtGHTorneira" placeholder="Ex: 12" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">KH Torneira (°dKH)</label>
+                                <input type="number" id="mixtKHTorneira" placeholder="Ex: 8" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcMistura()">
+                            <i class="fas fa-calculator"></i> Calcular Mistura
+                        </button>
+
+                        <div id="mixtResult" class="result-box" style="display: none;">
+                            <p>GH Final: <strong id="mixtGHFinal">0</strong> °dGH</p>
+                            <p>KH Final: <strong id="mixtKHFinal">0</strong> °dKH</p>
+                            <p>Volume Total: <strong id="mixtVolTotal">0</strong> L</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Fertilizantes -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-leaf" style="color: var(--accent-primary);"></i>
+                                Dosagem de Fertilizantes
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-fert')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-fert" class="info-box">
+                            <p><strong>Conceito:</strong> <span class="formula-tag">Estimative Index (EI) ou PPS-Pro</span></p>
+                            <p>Calcula a massa de fertilizante seco ou volume líquido para atingir uma concentração em ppm (partes por milhão).</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="fertVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Tipo de Nutriente</label>
+                                <select id="fertTipo" class="input-field w-full">
+                                    <option value="npk">NPK</option>
+                                    <option value="micro">Micro</option>
+                                    <option value="ca">Cálcio</option>
+                                    <option value="mg">Magnésio</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Dose (ppm)</label>
+                                <input type="number" id="fertDose" placeholder="Ex: 5" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Frequência</label>
+                                <select id="fertFrequencia" class="input-field w-full">
+                                    <option value="diaria">Diária</option>
+                                    <option value="semanal">Semanal</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcFertilizantes()">
+                            <i class="fas fa-calculator"></i> Calcular Fertilizante
+                        </button>
+
+                        <div id="fertResult" class="result-box" style="display: none;">
+                            <p>Dosagem: <strong id="fertDosagem">0</strong> g</p>
+                            <p>Frequência: <strong id="fertFrequenciaResult">Diária</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Carga Biológica -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-fish" style="color: var(--accent-primary);"></i>
+                                Carga Biológica
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-bio')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-bio" class="info-box">
+                            <p><strong>Regra Prática:</strong> <span class="formula-tag">1 cm de peixe adulto por Litro</span></p>
+                            <p>Uma regra empírica antiga ("inch per gallon" adaptada). Varia muito com a robustez da filtragem e agressividade da espécie.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="bioVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Tipo de Filtragem</label>
+                                <select id="bioFiltro" class="input-field w-full">
+                                    <option value="basico">Básico (1 cm/L)</option>
+                                    <option value="medio">Médio (2 cm/L)</option>
+                                    <option value="avancado">Avançado (3 cm/L)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcCargaBiologica()">
+                            <i class="fas fa-calculator"></i> Calcular Carga
+                        </button>
+
+                        <div id="bioResult" class="result-box" style="display: none;">
+                            <p>Comprimento Total de Peixes: <strong id="bioComprimento">0</strong> cm</p>
+                            <p>Quantidade Recomendada: <strong id="bioQuantidade">0</strong> peixes (aprox.)</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de UV -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-sun" style="color: var(--accent-primary);"></i>
+                                Dimensionamento de UV
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-uv')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-uv" class="info-box">
+                            <p><strong>Conceito:</strong> <span class="formula-tag">Dose UV = (Potência ÷ Vazão) × Fator</span></p>
+                            <p>Para esterilização (bactérias/algas), requer-se baixo fluxo e alta exposição. Para clarificação (água verde), fluxo pode ser maior.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="uvVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Ciclos/Dia</label>
+                                <input type="number" id="uvCiclos" placeholder="Ex: 3" value="3" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcUV()">
+                            <i class="fas fa-calculator"></i> Calcular UV
+                        </button>
+
+                        <div id="uvResult" class="result-box" style="display: none;">
+                            <p>Vazão UV Recomendada: <strong id="uvVazao">0</strong> L/h</p>
+                            <p>Potência Sugerida: <strong id="uvPotencia">0</strong> W</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        <!-- CATEGORIA: ÁGUA SALGADA -->
+            <section id="agua-salgada" class="category-section">
+                <div class="category-title">
+                    <i class="fas fa-water"></i> Cálculos para Água Salgada
+                </div>
+
+                <div class="calc-grid">
+                    <!-- Cálculo de Salinidade -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-flask" style="color: var(--accent-primary);"></i>
+                                Cálculo de Salinidade
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-sal')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-sal" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">Massa_Sal = Vol × (Densidade - 1) × K_sal</span></p>
+                            <p>Aproximação onde K_sal ~ 35-40g/L para atingir 1.025 SG (35ppt). Depende da marca do sal sintético.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="salinVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Densidade Alvo</label>
+                                <input type="number" id="salinDensidade" placeholder="Ex: 1.026" step="0.001" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcSalinidade()">
+                            <i class="fas fa-calculator"></i> Calcular Sal
+                        </button>
+
+                        <div id="salinResult" class="result-box" style="display: none;">
+                            <p>Quantidade de Sal: <strong id="salinSal">0</strong> kg</p>
+                            <p>Salinidade: <strong id="salinPPT">0</strong> ppt</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Correção de Salinidade -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-adjust" style="color: var(--accent-primary);"></i>
+                                Correção de Salinidade
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-correcao')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-correcao" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">Diluição / Concentração</span></p>
+                            <p>Calcula quanto de água doce adicionar para baixar a salinidade, ou água supersaturada para aumentar, mantendo o volume ou trocando parte dele.</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="corrVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Densidade Atual</label>
+                                <input type="number" id="corrDensidadeAtual" placeholder="Ex: 1.023" step="0.001" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Densidade Alvo</label>
+                                <input type="number" id="corrDensidadeAlvo" placeholder="Ex: 1.026" step="0.001" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcCorrecaoSalinidade()">
+                            <i class="fas fa-calculator"></i> Calcular Correção
+                        </button>
+
+                        <div id="corrResult" class="result-box" style="display: none;">
+                            <p>Adicionar Água Salgada: <strong id="corrSalgada">0</strong> L</p>
+                            <p>Remover Água Doce: <strong id="corrDoce">0</strong> L</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Rocha Viva -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-rock" style="color: var(--accent-primary);"></i>
+                                Quantidade de Rocha Viva
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-rocha')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-rocha" class="info-box">
+                            <p><strong>Recomendação:</strong> <span class="formula-tag">10% a 15% do Volume em Kg</span></p>
+                            <p>Rochas vivas são o principal filtro biológico do sistema Berlim. A porosidade é mais importante que o peso bruto.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume Display (L)</label>
+                                <input type="number" id="rochaVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Proporção (kg/L)</label>
+                                <input type="number" id="rochaProporcao" placeholder="Ex: 1.5" value="1.5" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcRochaViva()">
+                            <i class="fas fa-calculator"></i> Calcular Rocha
+                        </button>
+
+                        <div id="rochaResult" class="result-box" style="display: none;">
+                            <p>Quantidade de Rocha: <strong id="rochaQuantidade">0</strong> kg</p>
+                            <p>Volume Útil: <strong id="rochaVolumeUtil">0</strong> L</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Sump -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-cube" style="color: var(--accent-primary);"></i>
+                                Dimensionamento de Sump
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-sump')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-sump" class="info-box">
+                            <p><strong>Regra Prática:</strong> <span class="formula-tag">20% a 30% do Display</span></p>
+                            <p>O sump deve comportar a água que desce do display quando a bomba desliga (back-siphon) mais o volume operacional dos equipamentos.</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume Display (L)</label>
+                                <input type="number" id="sumpDisplay" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Percentual (%)</label>
+                                <input type="number" id="sumpPercentual" placeholder="Ex: 20" value="20" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Margem Segurança (%)</label>
+                                <input type="number" id="sumpMargem" placeholder="Ex: 10" value="10" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcSump()">
+                            <i class="fas fa-calculator"></i> Calcular Sump
+                        </button>
+
+                        <div id="sumpResult" class="result-box" style="display: none;">
+                            <p>Volume Sump: <strong id="sumpVolume">0</strong> L</p>
+                            <p>Espaço Segurança: <strong id="sumpEspaco">0</strong> L</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Skimmer -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-wind" style="color: var(--accent-primary);"></i>
+                                Dimensionamento de Skimmer
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-skimmer')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-skimmer" class="info-box">
+                            <p><strong>Fator de Superdimensionamento:</strong> <span class="formula-tag">Rated Capacity ÷ 2</span></p>
+                            <p>Fabricantes costumam superestimar a capacidade. Recomenda-se usar um skimmer classificado para o dobro do volume real do seu aquário.</p>
+                            <a href="https://www.reef2reef.com/" target="_blank" class="ref-link">
+                                <i class="fas fa-external-link-alt"></i> Ref: Reef2Reef Community
+                            </a>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume Total (L)</label>
+                                <input type="number" id="skimVolume" placeholder="Ex: 150" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Carga Biológica</label>
+                                <select id="skimCarga" class="input-field w-full">
+                                    <option value="baixa">Baixa (1 skimmer/100L)</option>
+                                    <option value="media">Média (1 skimmer/75L)</option>
+                                    <option value="alta">Alta (1 skimmer/50L)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcSkimmer()">
+                            <i class="fas fa-calculator"></i> Calcular Skimmer
+                        </button>
+
+                        <div id="skimResult" class="result-box" style="display: none;">
+                            <p>Capacidade Skimmer: <strong id="skimCapacidade">0</strong> L/h</p>
+                            <p>Modelo Recomendado: <strong id="skimModelo">-</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Alcalinidade -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-flask-vial" style="color: var(--accent-primary);"></i>
+                                Dosagem de Alcalinidade
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-alc')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-alc" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">Ballaling Method Lite</span></p>
+                            <p>Calcula a quantidade de Bicarbonato de Sódio necessário para elevar o dKH. 1g de NaHCO3 em 100L sobe aprox. 0.33 dKH.</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="alcVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">dKH Atual</label>
+                                <input type="number" id="alcAtual" placeholder="Ex: 8" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">dKH Alvo</label>
+                                <input type="number" id="alcAlvo" placeholder="Ex: 10" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcAlcalinidade()">
+                            <i class="fas fa-calculator"></i> Calcular Dosagem
+                        </button>
+
+                        <div id="alcResult" class="result-box" style="display: none;">
+                            <p>Dosagem: <strong id="alcDosagem">0</strong> ml/dia</p>
+                            <p>Duração: <strong id="alcDuracao">0</strong> dias</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Evaporação -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-droplets" style="color: var(--accent-primary);"></i>
+                                Reposição de Água Doce
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-evap')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-evap" class="info-box">
+                            <p><strong>Estimativa:</strong> <span class="formula-tag">1% a 3% ao dia</span></p>
+                            <p>A taxa depende da temperatura, umidade e superfície de contato. Essencial para manter a estabilidade osmótica em aquários marinhos.</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="evapVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Evaporação Diária (%)</label>
+                                <input type="number" id="evapDiaria" placeholder="Ex: 2" value="2" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Período</label>
+                                <select id="evapPeriodo" class="input-field w-full">
+                                    <option value="diaria">Diária</option>
+                                    <option value="semanal">Semanal</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcEvaporacao()">
+                            <i class="fas fa-calculator"></i> Calcular Evaporação
+                        </button>
+
+                        <div id="evapResult" class="result-box" style="display: none;">
+                            <p>Reposição: <strong id="evapReposicao">0</strong> L</p>
+                            <p>Reservatório: <strong id="evapReservatorio">0</strong> L</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Circulação -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-fan" style="color: var(--accent-primary);"></i>
+                                Circulação Interna
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-circ')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-circ" class="info-box">
+                            <p><strong>Turnover:</strong> <span class="formula-tag">SPS: 40-50x | LPS: 20-30x</span></p>
+                            <p>Corais precisam de fluxo para respirar e se alimentar. O fluxo deve ser turbulento e não laminar (direto).</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="circVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Múltiplo (x)</label>
+                                <input type="number" id="circMultiplo" placeholder="Ex: 20" value="20" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Tipo de Reef</label>
+                                <select id="circReef" class="input-field w-full">
+                                    <option value="lps">LPS (10-20x)</option>
+                                    <option value="mixed">Mixed (20-30x)</option>
+                                    <option value="sps">SPS (30-40x)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcCirculacao()">
+                            <i class="fas fa-calculator"></i> Calcular Circulação
+                        </button>
+
+                        <div id="circResult" class="result-box" style="display: none;">
+                            <p>Vazão Recomendada: <strong id="circVazao">0</strong> L/h</p>
+                            <p>Quantidade de Bombas: <strong id="circBombas">0</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        <!-- CATEGORIA: ÁGUA SALOBRA -->
+            <section id="agua-salobra" class="category-section">
+                <div class="category-title">
+                    <i class="fas fa-wave-square"></i> Cálculos para Água Salobra
+                </div>
+
+                <div class="calc-grid">
+                    <!-- Cálculo de Salinidade Salobra -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-flask" style="color: var(--accent-primary);"></i>
+                                Salinidade Salobra
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-salobra')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-salobra" class="info-box">
+                            <p><strong>Faixa:</strong> <span class="formula-tag">1.005 a 1.015 SG</span></p>
+                            <p>Ambientes estuarinos. A quantidade de sal é menor que a marinha (1.025), exigindo cálculo proporcional.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="salobVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Densidade Alvo</label>
+                                <input type="number" id="salobDensidade" placeholder="Ex: 1.010" step="0.001" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcSalobra()">
+                            <i class="fas fa-calculator"></i> Calcular Sal
+                        </button>
+
+                        <div id="salobResult" class="result-box" style="display: none;">
+                            <p>Quantidade de Sal: <strong id="salobSal">0</strong> kg</p>
+                            <p>Salinidade: <strong id="salobPPT">0</strong> ppt</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Ajuste Gradual -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-arrow-right-arrow-left" style="color: var(--accent-primary);"></i>
+                                Ajuste Gradual de Salinidade
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-ajuste')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-ajuste" class="info-box">
+                            <p><strong>Princípio:</strong> <span class="formula-tag">Osmorregulação Lenta</span></p>
+                            <p>Alterações bruscas de salinidade causam choque osmótico. Recomenda-se não alterar mais que 0.002 SG por semana.</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume (L)</label>
+                                <input type="number" id="ajustVolume" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Densidade Atual</label>
+                                <input type="number" id="ajustAtual" placeholder="Ex: 1.000" step="0.001" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Densidade Alvo</label>
+                                <input type="number" id="ajustAlvo" placeholder="Ex: 1.015" step="0.001" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-semibold mb-1 block">Semanas para Transição</label>
+                            <input type="number" id="ajustSemanas" placeholder="Ex: 4" value="4" class="input-field w-full mb-2">
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcAjusteGradual()">
+                            <i class="fas fa-calculator"></i> Calcular Ajuste
+                        </button>
+
+                        <div id="ajustResult" class="result-box" style="display: none;">
+                            <p>Sal por Semana: <strong id="ajustSal">0</strong> kg</p>
+                            <p>Incremento: <strong id="ajustIncremento">0</strong> densidade/semana</p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Mistura Salobra -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-flask-vial" style="color: var(--accent-primary);"></i>
+                                Mistura Doce + Salgada
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-mist-salobra')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-mist-salobra" class="info-box">
+                            <p><strong>Fórmula:</strong> <span class="formula-tag">Média Ponderada de Densidade</span></p>
+                            <p>Calcula a densidade final misturando um volume de água doce (SG 1.000) com água marinha.</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Volume Total (L)</label>
+                                <input type="number" id="mistVolTotal" placeholder="Ex: 100" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">% Água Doce</label>
+                                <input type="number" id="mistPercentDoce" placeholder="Ex: 50" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Densidade Salgada</label>
+                                <input type="number" id="mistDensidadeSalgada" placeholder="Ex: 1.026" step="0.001" class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcMisturaSalobra()">
+                            <i class="fas fa-calculator"></i> Calcular Mistura
+                        </button>
+
+                        <div id="mistResult" class="result-box" style="display: none;">
+                            <p>Água Doce: <strong id="mistVolDoce">0</strong> L</p>
+                            <p>Água Salgada: <strong id="mistVolSalgada">0</strong> L</p>
+                            <p>Densidade Final: <strong id="mistDensidadeFinal">0</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- Cálculo de Compatibilidade -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-check-circle" style="color: var(--accent-primary);"></i>
+                                Compatibilidade de Parâmetros
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-compat')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-compat" class="info-box">
+                            <p><strong>Base de Dados:</strong> <span class="formula-tag">FishBase / IUCN</span></p>
+                            <p>Compara os parâmetros inseridos com as faixas ideais de sobrevivência das espécies selecionadas.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">pH Atual</label>
+                                <input type="number" id="compatPH" placeholder="Ex: 7.5" step="0.1" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Dureza (°dGH)</label>
+                                <input type="number" id="compatGH" placeholder="Ex: 12" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Salinidade (ppt)</label>
+                                <input type="number" id="compatSalinidade" placeholder="Ex: 15" class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold mb-1 block">Espécie</label>
+                                <select id="compatEspecie" class="input-field w-full">
+                                    <option value="molinesia">Molinésia</option>
+                                    <option value="baiacu">Baiacu</option>
+                                    <option value="agulha">Agulha</option>
+                                    <option value="generico">Genérico</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary w-full" onclick="App.Modules.calcCompatibilidade()">
+                            <i class="fas fa-calculator"></i> Verificar Compatibilidade
+                        </button>
+
+                        <div id="compatResult" class="result-box" style="display: none;">
+                            <p>Status pH: <strong id="compatStatusPH">-</strong></p>
+                            <p>Status Dureza: <strong id="compatStatusGH">-</strong></p>
+                            <p>Status Salinidade: <strong id="compatStatusSal">-</strong></p>
+                            <p>Recomendação: <strong id="compatRecomendacao">-</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        <!-- CATEGORIA: LABCOM (NOVO) -->
+            <section id="labcom" class="category-section">
+                <div class="category-title">
+                    <i class="fas fa-fish"></i> Tratamentos Labcon
+                </div>
+
+                <div class="calc-grid">
+                    <!-- NOVO: Calculadora de TPA (Anticloro) -->
+                    <div class="card" style="border-left: 4px solid var(--accent-secondary);">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-faucet" style="color: var(--accent-primary);"></i>
+                                Preparação da Água (TPA)
+                            </h3>
+                            <!-- Botão de ajuda geral da seção mantido -->
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-tpa-calc')" title="Ver detalhes">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-tpa-calc" class="info-box">
+                            <p><strong>Atenção:</strong> Estes produtos devem ser dosados com base apenas no volume de água nova (da torneira) que você vai adicionar.</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="text-sm font-semibold mb-1 block">Volume da TPA (Litros)</label>
+                            <input type="number" id="labcomTpaVolume" placeholder="Ex: 20" class="input-field w-full text-lg" oninput="App.Modules.calcLabComTpa()">
+                            <p class="text-xs text-gray-500 mt-1">Quantidade de água a ser tratada</p>
+                        </div>
+
+                        <div id="labcomTpaResult" style="display: none;" class="space-y-3">
+                            <!-- Os cards serão injetados aqui via JS -->
+                        </div>
+                        
+                        <div id="labcomTpaEmpty" class="text-center py-4 text-gray-500">
+                            <p>Insira o volume da troca para ver os produtos.</p>
+                        </div>
+                    </div>
+
+                    <!-- Calculadora de Dosagem (Volume Total) -->
+                    <div class="card" style="grid-row: span 2;">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-eye-dropper" style="color: var(--accent-primary);"></i>
+                                Tratamentos (Vol. Total)
+                            </h3>
+                            <button class="info-btn" onclick="App.UI.toggleInfo('info-labcom')" title="Ver fórmula e referências">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div id="info-labcom" class="info-box">
+                            <p><strong>Referência:</strong> Labcon/Alcon</p>
+                            <p>Medicamentos, algicidas e fertilizantes devem ser calculados sobre o volume total do aquário.</p>
+                            <hr style="border-color: var(--border-color); margin: 0.5rem 0;">
+                            <p><strong>Ciclos de Tratamento:</strong></p>
+                            <ul style="list-style-type: disc; margin-left: 1.2rem; margin-bottom: 0.5rem;">
+                                <li><strong>Ictio/Fungos:</strong> Geralmente requerem aplicações a cada 48 horas. Aumente a temperatura para 28-30°C.</li>
+                                <li><strong>Duração:</strong> Mantenha o tratamento até o desaparecimento dos sintomas + 2 dias de segurança.</li>
+                                <li><strong>Carvão Ativado:</strong> Deve ser removido do filtro durante qualquer tratamento medicamentoso.</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="text-sm font-semibold mb-1 block">Volume do Aquário (L)</label>
+                            <input type="number" id="labcomVolume" placeholder="Ex: 100" class="input-field w-full text-lg" oninput="App.Modules.calcLabComTank()">
+                        </div>
+
+                        <div id="labcomListResult" style="display: none;" class="space-y-3 mb-6">
+                            <!-- Os cards serão injetados aqui via JS -->
+                        </div>
+                        
+                        <div id="labcomEmptyState" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-calculator text-4xl mb-3 opacity-30"></i>
+                            <p>Insira o volume total acima.</p>
+                        </div>
+
+                        <!-- SEÇÃO INTEGRADA: Planejamento de Tratamento -->
+                        <div id="planningSection" style="display: none; border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-top: 1.5rem;">
+                            <h4 class="text-md font-bold mb-4 flex items-center gap-2 text-accent-secondary">
+                                <i class="fas fa-calendar-alt"></i> Planejamento de Ciclo (Tratamento Longo)
+                            </h4>
+                            
+                            <div class="mb-3">
+                                <label class="text-sm font-semibold mb-1 block">Produto para Tratamento</label>
+                                <select id="planProduto" class="input-field w-full">
+                                    <!-- Preenchido via JS com base nos produtos compatíveis -->
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div>
+                                    <label class="text-sm font-semibold mb-1 block">Duração (Dias)</label>
+                                    <input type="number" id="planDias" placeholder="Ex: 5" class="input-field w-full">
+                                </div>
+                                <div>
+                                    <label class="text-sm font-semibold mb-1 block">Intervalo</label>
+                                    <select id="planIntervalo" class="input-field w-full">
+                                        <option value="24">A cada 24h</option>
+                                        <option value="48">A cada 48h</option>
+                                        <option value="72">A cada 72h</option>
+                                        <option value="168">Semanal (168h)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button class="btn-primary w-full" style="background-color: var(--bg-tertiary); border: 1px solid var(--accent-primary); color: var(--accent-primary);" onclick="App.Modules.calcPlanejamento()">
+                                <i class="fas fa-calculator"></i> Calcular Total do Ciclo
+                            </button>
+
+                            <div id="planResult" class="result-box" style="display: none; margin-top: 1rem; background-color: rgba(0,0,0,0.3);">
+                                <div class="flex justify-between items-center">
+                                    <span>Aplicações Totais:</span>
+                                    <strong id="planAplicacoes" class="text-white">0</strong>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span>Volume Total Necessário:</span>
+                                    <strong class="text-accent-primary text-lg"><span id="planTotalProduto">0</span> mL</strong>
+                                </div>
+                                <p style="font-size: 0.75rem; color: var(--warning-color); margin-top: 0.75rem; text-align: center;">
+                                    <i class="fas fa-exclamation-triangle"></i> Remova o Carvão Ativado durante o tratamento!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nova Seção: Instruções de Testes -->
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fas fa-clipboard-list" style="color: var(--accent-primary);"></i>
+                                Instruções de Testes
+                            </h3>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-sm font-semibold mb-1 block">Selecione o Teste</label>
+                            <select id="testSelect" class="input-field w-full" onchange="App.Modules.showTestInstructions()">
+                                <option value="ph_tropical">pH Tropical</option>
+                                <option value="ph_ciclideos">pH Ciclídeos/Marinho</option>
+                                <option value="amonia">Amônia Tóxica</option>
+                                <option value="nitrito">Nitrito</option>
+                                <option value="cloro">Cloro</option>
+                                <option value="kh">Dureza Carbonatos (KH)</option>
+                                <option value="gh">Dureza Total (GH)</option>
+                            </select>
+                        </div>
+
+                        <div id="testInstructions" class="bg-gray-800 p-4 rounded-md border border-gray-700">
+                            <!-- Conteúdo injetado via JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        <!-- SEÇÃO CONVERSORES -->
+        <section id="conversores" class="category-section">
+            <div class="category-title">
+                <i class="fas fa-exchange-alt"></i> Conversores de Medidas
+            </div>
+
+            <div class="calc-grid">
+                <!-- Conversor de Volume -->
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-cube" style="color: var(--accent-primary);"></i>
+                        Conversor de Volume
+                    </h3>
+
+                    <div class="mb-4">
+                        <label class="text-sm font-semibold mb-1 block">Valor</label>
+                        <input type="number" id="convVolValue" placeholder="Ex: 100" class="input-field w-full" onchange="App.Modules.converter('volume')">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <div>
+                            <label class="text-sm font-semibold mb-1 block">De</label>
+                            <select id="convVolFrom" class="input-field w-full" onchange="App.Modules.converter('volume')">
+                                <option value="litros" selected>Litros (L)</option>
+                                <option value="ml">Mililitros (mL)</option>
+                                <option value="gal-us">Galões US (gal)</option>
+                                <option value="gal-uk">Galões UK (gal)</option>
+                                <option value="oz">Onças Fluidas (oz)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold mb-1 block">Para</label>
+                            <select id="convVolTo" class="input-field w-full" onchange="App.Modules.converter('volume')">
+                                <option value="litros">Litros (L)</option>
+                                <option value="ml">Mililitros (mL)</option>
+                                <option value="gal-us" selected>Galões US (gal)</option>
+                                <option value="gal-uk">Galões UK (gal)</option>
+                                <option value="oz">Onças Fluidas (oz)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="result-box">
+                        <p>Resultado: <strong id="convVolResult">0</strong></p>
+                    </div>
+                </div>
+
+                <!-- Conversor de Temperatura -->
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-thermometer-half" style="color: var(--accent-primary);"></i>
+                        Conversor de Temperatura
+                    </h3>
+
+                    <div class="mb-4">
+                        <label class="text-sm font-semibold mb-1 block">Valor</label>
+                        <input type="number" id="convTempValue" placeholder="Ex: 25" class="input-field w-full" onchange="App.Modules.converter('temperatura')">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <div>
+                            <label class="text-sm font-semibold mb-1 block">De</label>
+                            <select id="convTempFrom" class="input-field w-full" onchange="App.Modules.converter('temperatura')">
+                                <option value="celsius" selected>Celsius (°C)</option>
+                                <option value="fahrenheit">Fahrenheit (°F)</option>
+                                <option value="kelvin">Kelvin (K)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold mb-1 block">Para</label>
+                            <select id="convTempTo" class="input-field w-full" onchange="App.Modules.converter('temperatura')">
+                                <option value="celsius">Celsius (°C)</option>
+                                <option value="fahrenheit" selected>Fahrenheit (°F)</option>
+                                <option value="kelvin">Kelvin (K)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="result-box">
+                        <p>Resultado: <strong id="convTempResult">0</strong></p>
+                    </div>
+                </div>
+
+                <!-- Conversor de Comprimento -->
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-ruler" style="color: var(--accent-primary);"></i>
+                        Conversor de Comprimento
+                    </h3>
+
+                    <div class="mb-4">
+                        <label class="text-sm font-semibold mb-1 block">Valor</label>
+                        <input type="number" id="convLengthValue" placeholder="Ex: 80" class="input-field w-full" onchange="App.Modules.converter('comprimento')">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <div>
+                            <label class="text-sm font-semibold mb-1 block">De</label>
+                            <select id="convLengthFrom" class="input-field w-full" onchange="App.Modules.converter('comprimento')">
+                                <option value="cm" selected>Centímetros (cm)</option>
+                                <option value="m">Metros (m)</option>
+                                <option value="mm">Milímetros (mm)</option>
+                                <option value="in">Polegadas (in)</option>
+                                <option value="ft">Pés (ft)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold mb-1 block">Para</label>
+                            <select id="convLengthTo" class="input-field w-full" onchange="App.Modules.converter('comprimento')">
+                                <option value="cm">Centímetros (cm)</option>
+                                <option value="m">Metros (m)</option>
+                                <option value="mm">Milímetros (mm)</option>
+                                <option value="in" selected>Polegadas (in)</option>
+                                <option value="ft">Pés (ft)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="result-box">
+                        <p>Resultado: <strong id="convLengthResult">0</strong></p>
+                    </div>
+                </div>
+
+                <!-- Conversor de Dureza -->
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-flask-vial" style="color: var(--accent-primary);"></i>
+                        Conversor de Dureza (GH/KH)
+                    </h3>
+
+                    <div class="mb-4">
+                        <label class="text-sm font-semibold mb-1 block">Valor</label>
+                        <input type="number" id="convHardValue" placeholder="Ex: 5" class="input-field w-full" onchange="App.Modules.converter('dureza')">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <div>
+                            <label class="text-sm font-semibold mb-1 block">De</label>
+                            <select id="convHardFrom" class="input-field w-full" onchange="App.Modules.converter('dureza')">
+                                <option value="dkh">°dKH (graus alemães)</option>
+                                <option value="ppm" selected>ppm CaCO₃</option>
+                                <option value="dgh">°dGH</option>
+                                <option value="fh">°fH (graus franceses)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold mb-1 block">Para</label>
+                            <select id="convHardTo" class="input-field w-full" onchange="App.Modules.converter('dureza')">
+                                <option value="dkh" selected>°dKH (graus alemães)</option>
+                                <option value="ppm">ppm CaCO₃</option>
+                                <option value="dgh">°dGH</option>
+                                <option value="fh">°fH (graus franceses)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="result-box">
+                        <p>Resultado: <strong id="convHardResult">0</strong></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO AJUDA -->
+        <section id="ajuda" class="category-section">
+            <div class="category-title">
+                <i class="fas fa-question-circle"></i> Ajuda e Informações
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-info-circle" style="color: var(--accent-primary);"></i>
+                        Sobre o Aquazen Calc
+                    </h3>
+                    <p class="mb-3" style="color: var(--text-secondary);">O Aquazen Calc é uma ferramenta completa para aquaristas, oferecendo calculadoras e conversores essenciais para o gerenciamento de aquários Low Tech, Medium Tech e High Tech.</p>
+                    <p style="color: var(--text-secondary);">Todos os dados são armazenados localmente no seu navegador, garantindo privacidade e acesso offline.</p>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-palette" style="color: var(--accent-primary);"></i>
+                        Personalização
+                    </h3>
+                    <p class="mb-4" style="color: var(--text-secondary);">Escolha o tema visual de sua preferência:</p>
+                    
+                    <div class="flex justify-start gap-4 mb-2 flex-wrap">
+                        <button id="theme-dark-btn" class="theme-btn active" title="Deep Ocean" onclick="App.UI.setTheme('dark')"></button>
+                        <button id="theme-cyan-btn" class="theme-btn" title="Ciano" onclick="App.UI.setTheme('cyan')"></button>
+                        <button id="theme-green-btn" class="theme-btn" title="Planted Tank" onclick="App.UI.setTheme('green')"></button>
+                        <button id="theme-light-btn" class="theme-btn" title="Lab" onclick="App.UI.setTheme('light')"></button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-calculator" style="color: var(--accent-primary);"></i>
+                        Calculadoras Disponíveis
+                    </h3>
+                    <ul style="color: var(--text-secondary); list-style: none; padding-left: 0;">
+                        <li class="mb-2"><i class="fas fa-check" style="color: var(--success-color);"></i> Volume de aquários (diversos formatos)</li>
+                        <li class="mb-2"><i class="fas fa-check" style="color: var(--success-color);"></i> Peso total do sistema</li>
+                        <li class="mb-2"><i class="fas fa-check" style="color: var(--success-color);"></i> Vazão de filtragem</li>
+                        <li class="mb-2"><i class="fas fa-check" style="color: var(--success-color);"></i> Potência de aquecedor/chiller</li>
+                        <li class="mb-2"><i class="fas fa-check" style="color: var(--success-color);"></i> Iluminação recomendada</li>
+                        <li class="mb-2"><i class="fas fa-check" style="color: var(--success-color);"></i> Quantidade de substrato</li>
+                        <li class="mb-2"><i class="fas fa-check" style="color: var(--success-color);"></i> E muito mais...</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-exchange-alt" style="color: var(--accent-primary);"></i>
+    <!-- Modal de Detalhes do Produto -->
+    <div id="productModal" class="modal-overlay" onclick="App.UI.closeProductModal(event)">
+        <div class="modal-content">
+            <button class="modal-close" onclick="App.UI.closeProductModal(event, true)">&times;</button>
+            <h3 id="modalProductTitle" class="text-xl font-bold mb-4 text-accent-primary flex items-center gap-2">
+                <i class="fas fa-info-circle"></i> <span>Nome do Produto</span>
+            </h3>
+            
+            <div class="mb-4">
+                <h4 class="text-sm font-bold text-gray-400 uppercase mb-1">Quando Usar</h4>
+                <p id="modalWhen" class="text-gray-300 bg-gray-800 p-3 rounded border-l-4 border-accent-secondary">
+                    Descrição de uso...
+                </p>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-bold text-gray-400 uppercase mb-1">Resultado Esperado</h4>
+                <p id="modalResult" class="text-gray-300">
+                    Resultado...
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t mt-12" style="border-color: var(--border-color); background-color: var(--bg-secondary);">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="grid grid-cols-3 gap-4 items-center text-xs" style="color: var(--text-secondary);">
+                <!-- Esquerda: Versão e Data -->
+                <div class="text-left">
+                    <span>v0.1.6 | Modificado: 11/01/2026</span>
+                </div>
+                
+                <!-- Centro: Chamada para Doação -->
+                <div class="text-center">
+                    <span><i class="fas fa-heart" style="color: var(--danger-color);"></i> Ajude o projeto fazendo uma pequena doação</span>
+                </div>
+                
+                <!-- Direita: Licença e Autor -->
+                <div class="text-right flex items-center justify-end gap-1">
+                    <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" style="color: var(--accent-primary);">AGPLv3</a>
+                    <span>|</span>
+                    <a href="https://github.com/alexsandroccarv" target="_blank" style="color: var(--accent-primary);">
+                        <i class="fab fa-github"></i> Alexsandro Cardoso Carvalho
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Namespace Pattern
+        const App = {
+            Store: {},
+            UI: {},
+            Modules: {}
+        };
+        
+
+
+        // ========== STORE (Persistência) ==========
+        App.Store.set = function(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    console.error('localStorage quota exceeded');
+                    alert('Espaço de armazenamento cheio. Limpe alguns dados.');
+                }
+            }
+        };
+
+        App.Store.get = function(key, defaultValue = null) {
+            try {
+                const value = localStorage.getItem(key);
+                return value ? JSON.parse(value) : defaultValue;
+            } catch (e) {
+                console.error('Error reading from localStorage:', e);
+                return defaultValue;
+            }
+        };
+
+        // ========== UI (Interface) ==========
+        App.UI.setTheme = function(theme) {
+            document.body.className = theme === 'dark' ? '' : `theme-${theme}`;
+            App.Store.set('theme', theme);
+            
+            // Atualizar botões ativos
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`theme-${theme}-btn`).classList.add('active');
+        };
+
+        App.UI.loadConfig = function() {
+            const theme = App.Store.get('theme', 'dark');
+            App.UI.setTheme(theme);
+        };
+
+        App.UI.switchSection = function(sectionId) {
+            // Ocultar todas as seções
+            document.querySelectorAll('.category-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Mostrar a seção selecionada
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.add('active');
+            }
+        };
+
+        App.UI.switchCategory = function(categoryId) {
+            // Ocultar todas as seções de categoria
+            document.querySelectorAll('.category-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Mostrar a categoria selecionada
+            const category = document.getElementById(categoryId);
+            if (category) {
+                category.classList.add('active');
+            }
+        };
+
+        // Toggle Info Box
+        App.UI.toggleInfo = function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.style.display === 'block') {
+                    el.style.display = 'none';
+                } else {
+                    el.style.display = 'block';
+                }
+            }
+        };
+
+        // Modal Functions
+        App.UI.showProductModal = function(name, when, result) {
+            document.getElementById('modalProductTitle').querySelector('span').textContent = name;
+            document.getElementById('modalWhen').textContent = when;
+            document.getElementById('modalResult').textContent = result;
+            
+            const modal = document.getElementById('productModal');
+            modal.classList.add('active');
+        };
+
+        App.UI.closeProductModal = function(event, force = false) {
+            if (force || event.target.id === 'productModal') {
+                document.getElementById('productModal').classList.remove('active');
+            }
+        };
+
+        // ========== MODULES (Calculadoras) ==========
+        
+        // Listener para mudança de tipo de volume - Controla visibilidade dos inputs
+        App.Modules.onVolumeTypeChange = function() {
+            const type = document.getElementById('volumeType').value;
+            
+            // Resetar visibilidade
+            const fields = ['field-comprimento', 'field-largura', 'field-diametro', 'field-lado', 'field-altura'];
+            fields.forEach(id => document.getElementById(id).classList.add('hidden'));
+            
+            // Limpar inputs
+            const inputs = ['volComprimento', 'volLargura', 'volDiametro', 'volLado', 'volAltura'];
+            inputs.forEach(id => document.getElementById(id).value = '');
+            
+            // Configurar campos visíveis baseado no tipo
+            if (type === 'retangular' || type === 'bowfront') {
+                document.getElementById('field-comprimento').classList.remove('hidden');
+                document.getElementById('field-largura').classList.remove('hidden');
+                document.getElementById('field-altura').classList.remove('hidden');
+            } else if (type === 'cilindrico') {
+                document.getElementById('field-diametro').classList.remove('hidden');
+                document.getElementById('field-altura').classList.remove('hidden');
+            } else if (type === 'hexagonal') {
+                document.getElementById('field-lado').classList.remove('hidden');
+                document.getElementById('field-altura').classList.remove('hidden');
+            } else if (type === 'globo') {
+                document.getElementById('field-diametro').classList.remove('hidden');
+            }
+            
+            // Atualizar Diagrama Esquemático
+            App.Modules.updateSVG(type);
+            document.getElementById('volumeResult').style.display = 'none';
+        };
+
+        App.Modules.calcVolume = function() {
+            const type = document.getElementById('volumeType').value;
+            
+            // Coletar valores
+            const comp = parseFloat(document.getElementById('volComprimento').value) || 0;
+            const larg = parseFloat(document.getElementById('volLargura').value) || 0;
+            const alt = parseFloat(document.getElementById('volAltura').value) || 0;
+            const diam = parseFloat(document.getElementById('volDiametro').value) || 0;
+            const lado = parseFloat(document.getElementById('volLado').value) || 0;
+            
+            let volume = 0;
+            
+            if (type === 'retangular') {
+                volume = (comp * larg * alt) / 1000;
+            } else if (type === 'cilindrico') {
+                // V = π * r² * h
+                const raio = diam / 2;
+                volume = (Math.PI * Math.pow(raio, 2) * alt) / 1000;
+            } else if (type === 'bowfront') {
+                // Aproximação simples para Bowfront
+                volume = ((comp * larg * alt) * 0.9) / 1000;
+            } else if (type === 'hexagonal') {
+                // V = (3 * √3 / 2) * L² * h
+                volume = ((3 * Math.sqrt(3) / 2) * Math.pow(lado, 2) * alt) / 1000;
+            } else if (type === 'globo') {
+                // Volume de esfera: (4/3) * π * r³
+                const raio = diam / 2;
+                volume = ((4 / 3) * Math.PI * Math.pow(raio, 3)) / 1000;
+            }
+            
+            const galoes = volume * 0.264172;
+            
+            document.getElementById('volumeResultValue').textContent = volume.toFixed(2);
+            document.getElementById('volumeGaloes').textContent = galoes.toFixed(2);
+            document.getElementById('volumeResult').style.display = 'block';
+        };
+
+        // Função auxiliar removida pois agora usamos diagramas estáticos
+        App.Modules.updateSVGFromInputs = function() {
+            // Depreciado na nova estratégia
+        };
+
+        App.Modules.updateSVG = function(type) {
+            const container = document.getElementById('volumeSVG');
+            
+            // Estratégia: Diagramas Esquemáticos Estáticos (Blueprints)
+            // Não dependem dos valores inseridos para evitar deformação visual
+            
+            const color = "var(--accent-primary)"; // Cor do tema
+            const textColor = "var(--text-secondary)";
+            
+            let svgContent = '';
+
+            if (type === 'retangular') {
+                svgContent = `
+                    <svg viewBox="0 0 400 350" width="100%" height="250" style="max-width:300px">
+                        <!-- Estilo -->
+                        <defs>
+                            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L9,3 z" fill="${textColor}" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Cubo 3D Wireframe -->
+                        <path d="M50,100 L200,50 L350,100 L200,150 L50,100" fill="none" stroke="${color}" stroke-width="2" />
+                        <path d="M50,100 L50,250 L200,300 L350,250 L350,100" fill="none" stroke="${color}" stroke-width="2" />
+                        <path d="M200,300 L200,150" fill="none" stroke="${color}" stroke-width="2" />
+                        
+                        <!-- Cota Comprimento (Frente Inferior - Inclinada) -->
+                        <line x1="50" y1="265" x2="200" y2="315" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <text x="100" y="310" fill="${textColor}" font-size="14" transform="rotate(18 100,310)">Comprimento</text>
+                        
+                        <!-- Cota Altura (Lateral Esquerda - Vertical) -->
+                        <line x1="35" y1="100" x2="35" y2="250" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <text x="25" y="180" fill="${textColor}" font-size="14" transform="rotate(-90 25,180)">Altura</text>
+                        
+                        <!-- Cota Largura (Lateral Direita/Profundidade - Inclinada Corretamente) -->
+                        <line x1="210" y1="315" x2="360" y2="265" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <text x="300" y="305" fill="${textColor}" font-size="14" transform="rotate(-18 300,305)">Largura</text>
+                    </svg>`;
+            } else if (type === 'cilindrico') {
+                svgContent = `
+                    <svg viewBox="0 0 400 300" width="100%" height="250" style="max-width:300px">
+                         <defs>
+                            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L9,3 z" fill="${textColor}" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Cilindro -->
+                        <ellipse cx="200" cy="80" rx="100" ry="40" fill="none" stroke="${color}" stroke-width="2"/>
+                        <line x1="100" y1="80" x2="100" y2="250" stroke="${color}" stroke-width="2"/>
+                        <line x1="300" y1="80" x2="300" y2="250" stroke="${color}" stroke-width="2"/>
+                        <path d="M100,250 A100,40 0 0,0 300,250" fill="none" stroke="${color}" stroke-width="2"/>
+                        <path d="M100,250 A100,40 0 0,1 300,250" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="5,5"/>
+                        
+                        <!-- Cota Diâmetro -->
+                        <line x1="100" y1="30" x2="300" y2="30" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <text x="200" y="20" text-anchor="middle" fill="${textColor}" font-size="14">Diâmetro</text>
+                        
+                        <!-- Cota Altura -->
+                        <line x1="320" y1="80" x2="320" y2="250" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <text x="335" y="170" fill="${textColor}" font-size="14" transform="rotate(90 335,170)">Altura</text>
+                    </svg>`;
+            } else if (type === 'bowfront') {
+                svgContent = `
+                    <svg viewBox="0 0 400 300" width="100%" height="250" style="max-width:300px">
+                        <defs>
+                            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L9,3 z" fill="${textColor}" />
+                            </marker>
+                        </defs>
+
+                        <!-- Base (Topo) -->
+                        <path d="M100,80 L300,80 L300,120 Q200,160 100,120 Z" fill="none" stroke="${color}" stroke-width="2" opacity="0.5"/>
+                        
+                        <!-- Corpo -->
+                        <path d="M100,80 L100,220" stroke="${color}" stroke-width="2"/>
+                        <path d="M300,80 L300,220" stroke="${color}" stroke-width="2"/>
+                        <path d="M100,220 L300,220 L300,260 Q200,300 100,260 Z" fill="none" stroke="${color}" stroke-width="2"/>
+                        
+                        <!-- Cota Comprimento (Atras) -->
+                        <line x1="100" y1="60" x2="300" y2="60" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <text x="200" y="50" text-anchor="middle" fill="${textColor}" font-size="14">Comprimento</text>
+                        
+                        <!-- Cota Altura -->
+                        <line x1="80" y1="80" x2="80" y2="220" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <text x="70" y="150" text-anchor="middle" fill="${textColor}" font-size="14" transform="rotate(-90 70,150)">Altura</text>
+                        
+                        <!-- Cota Largura (Lateral) -->
+                        <line x1="320" y1="80" x2="320" y2="120" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <text x="340" y="110" fill="${textColor}" font-size="14">Largura</text>
+                    </svg>`;
+            } else if (type === 'hexagonal') {
+                svgContent = `
+                    <svg viewBox="0 0 400 300" width="100%" height="250" style="max-width:300px">
+                         <defs>
+                            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L9,3 z" fill="${textColor}" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Topo Hexagono -->
+                        <polygon points="150,50 250,50 300,100 250,150 150,150 100,100" fill="none" stroke="${color}" stroke-width="2" />
+                        
+                        <!-- Linhas verticais -->
+                        <line x1="100" y1="100" x2="100" y2="250" stroke="${color}" stroke-width="2"/>
+                        <line x1="150" y1="150" x2="150" y2="300" stroke="${color}" stroke-width="2"/>
+                        <line x1="250" y1="150" x2="250" y2="300" stroke="${color}" stroke-width="2"/>
+                        <line x1="300" y1="100" x2="300" y2="250" stroke="${color}" stroke-width="2"/>
+                        
+                        <!-- Base -->
+                        <polyline points="100,250 150,300 250,300 300,250" fill="none" stroke="${color}" stroke-width="2"/>
+                        
+                        <!-- Cota Lado -->
+                        <line x1="150" y1="40" x2="250" y2="40" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <text x="200" y="30" text-anchor="middle" fill="${textColor}" font-size="14">Lado</text>
+                        
+                        <!-- Cota Altura -->
+                        <line x1="320" y1="100" x2="320" y2="250" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <text x="335" y="175" fill="${textColor}" font-size="14" transform="rotate(90 335,175)">Altura</text>
+                    </svg>`;
+            } else if (type === 'globo') {
+                svgContent = `
+                    <svg viewBox="0 0 400 300" width="100%" height="250" style="max-width:300px">
+                         <defs>
+                            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L9,3 z" fill="${textColor}" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Esfera -->
+                        <circle cx="200" cy="150" r="100" fill="none" stroke="${color}" stroke-width="2"/>
+                        <!-- Efeito 3D -->
+                        <ellipse cx="200" cy="150" rx="100" ry="30" fill="none" stroke="${color}" stroke-width="1" stroke-dasharray="5,5" opacity="0.6"/>
+                        
+                        <!-- Cota Diâmetro -->
+                        <line x1="100" y1="40" x2="300" y2="40" stroke="${textColor}" stroke-width="1" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+                        <line x1="100" y1="40" x2="100" y2="80" stroke="${textColor}" stroke-width="1" stroke-dasharray="2,2"/>
+                        <line x1="300" y1="40" x2="300" y2="80" stroke="${textColor}" stroke-width="1" stroke-dasharray="2,2"/>
+                        <text x="200" y="30" text-anchor="middle" fill="${textColor}" font-size="14">Diâmetro</text>
+                    </svg>`;
+            }
+            
+            if (container) {
+                container.innerHTML = svgContent;
+            }
+        };
+
+        App.Modules.calcPesoTotal = function() {
+            const volume = parseFloat(document.getElementById('pesoVolume').value) || 0;
+            const pesoVidro = parseFloat(document.getElementById('pesoVidro').value) || 0;
+            const pesoSubstrato = parseFloat(document.getElementById('pesoSubstrato').value) || 0;
+            const pesoRochas = parseFloat(document.getElementById('pesoRochas').value) || 0;
+            
+            const pesoAgua = volume * 1; // 1 kg por litro
+            const pesoTotal = pesoAgua + pesoVidro + pesoSubstrato + pesoRochas;
+            
+            document.getElementById('pesoAgua').textContent = pesoAgua.toFixed(2);
+            document.getElementById('pesoTotalValue').textContent = pesoTotal.toFixed(2);
+            document.getElementById('pesoResult').style.display = 'block';
+        };
+
+        App.Modules.calcFiltragem = function() {
+            const volume = parseFloat(document.getElementById('filtroVolume').value) || 0;
+            const ciclos = parseFloat(document.getElementById('filtroCiclos').value) || 4;
+            
+            const vazao = volume * ciclos;
+            const dia = vazao * 24;
+            
+            document.getElementById('filtroVazao').textContent = vazao.toFixed(2);
+            document.getElementById('filtroDia').textContent = dia.toFixed(2);
+            document.getElementById('filtroResult').style.display = 'block';
+        };
+
+        App.Modules.calcAquecedor = function() {
+            const volume = parseFloat(document.getElementById('aquecVolume').value) || 0;
+            const atual = parseFloat(document.getElementById('aquecAtual').value) || 0;
+            const desejada = parseFloat(document.getElementById('aquecDesejada').value) || 0;
+            
+            const diferenca = desejada - atual;
+            const potencia = volume * diferenca * 0.5; // Aproximadamente 0.5W por litro por °C
+            
+            document.getElementById('aquecPotencia').textContent = Math.ceil(potencia);
+            document.getElementById('aquecResult').style.display = 'block';
+        };
+
+        App.Modules.calcIluminacao = function() {
+            const volume = parseFloat(document.getElementById('ilumVolume').value) || 0;
+            const tipo = document.getElementById('ilumTipo').value;
+            
+            let minW, maxW, minLum, maxLum;
+            
+            if (tipo === 'lowtech') {
+                minW = volume * 0.25;
+                maxW = volume * 0.5;
+                minLum = minW * 50;
+                maxLum = maxW * 50;
+            } else if (tipo === 'mediumtech') {
+                minW = volume * 0.5;
+                maxW = volume * 1;
+                minLum = minW * 60;
+                maxLum = maxW * 60;
+            } else if (tipo === 'hightech') {
+                minW = volume * 1;
+                maxW = volume * 1.5;
+                minLum = minW * 70;
+                maxLum = maxW * 70;
+            }
+            
+            document.getElementById('ilumWatts').textContent = minW.toFixed(2);
+            document.getElementById('ilumWattsMax').textContent = maxW.toFixed(2);
+            document.getElementById('ilumLumens').textContent = Math.ceil(minLum);
+            document.getElementById('ilumLumensMax').textContent = Math.ceil(maxLum);
+            document.getElementById('ilumResult').style.display = 'block';
+        };
+
+        App.Modules.calcSubstrato = function() {
+            const comp = parseFloat(document.getElementById('substratoComprimento').value) || 0;
+            const larg = parseFloat(document.getElementById('substratoLargura').value) || 0;
+            const alt = parseFloat(document.getElementById('substratoAltura').value) || 0;
+            const densidade = parseFloat(document.getElementById('substratoDensidade').value) || 1.5;
+            
+            const volume = (comp * larg * alt) / 1000;
+            const peso = volume * densidade;
+            
+            document.getElementById('substratoVolume').textContent = volume.toFixed(2);
+            document.getElementById('substratoPeso').textContent = peso.toFixed(2);
+            document.getElementById('substratoResult').style.display = 'block';
+        };
+
+        App.Modules.calcTroca = function() {
+            const volume = parseFloat(document.getElementById('trocaVolume').value) || 0;
+            const percentual = parseFloat(document.getElementById('trocaPercentual').value) || 30;
+            
+            const volumeTroca = (volume * percentual) / 100;
+            
+            document.getElementById('trocaVolumeTroca').textContent = volumeTroca.toFixed(2);
+            document.getElementById('trocaResult').style.display = 'block';
+        };
+
+        App.Modules.calcDosagem = function() {
+            const volume = parseFloat(document.getElementById('dosageVolume').value) || 0;
+            const recomendada = parseFloat(document.getElementById('dosageRecomendada').value) || 0;
+            const unidade = document.getElementById('dosageUnidade').value;
+            
+            const total = volume * recomendada;
+            
+            document.getElementById('dosageTotalValue').textContent = total.toFixed(2);
+            document.getElementById('dosageUnidadeResult').textContent = unidade === 'ml' ? 'ml' : unidade === 'gotas' ? 'gotas' : 'g';
+            document.getElementById('dosageResult').style.display = 'block';
+        };
+
+        // ========== NOVAS CALCULADORAS (Gerais) ==========
+        App.Modules.calcEnergia = function() {
+            const watts = parseFloat(document.getElementById('energyWatts').value) || 0;
+            const horas = parseFloat(document.getElementById('energyHours').value) || 0;
+            const tarifa = parseFloat(document.getElementById('energyRate').value) || 0;
+
+            const kwhMes = (watts * horas * 30) / 1000;
+            const custo = kwhMes * tarifa;
+
+            document.getElementById('energyKwh').textContent = kwhMes.toFixed(2);
+            document.getElementById('energyCost').textContent = custo.toFixed(2);
+            document.getElementById('energyResult').style.display = 'block';
+        };
+
+        App.Modules.calcAquascaping = function() {
+            const comp = parseFloat(document.getElementById('scapeLength').value) || 0;
+            
+            if (comp <= 0) return;
+
+            // Regra de Ouro (Golden Ratio)
+            const ratio = 0.618;
+            const p1 = comp * (1 - ratio); // ~0.382 (Esquerda)
+            const p2 = comp * ratio;       // ~0.618 (Direita)
+
+            document.getElementById('scapeLeft').textContent = p1.toFixed(1);
+            document.getElementById('scapeRight').textContent = p2.toFixed(1);
+            document.getElementById('scapeResult').style.display = 'block';
+
+            // Gerar SVG Visual
+            const container = document.getElementById('scapeSVG');
+            const color = "var(--accent-primary)";
+            const lineColor = "var(--warning-color)";
+            const textColor = "var(--text-secondary)";
+
+            // Normalizar para viewbox de 300px largura
+            const viewW = 300;
+            const viewH = 150; // Aspecto 2:1 (exemplo)
+            
+            // Posições X no SVG
+            const x1 = viewW * 0.382;
+            const x2 = viewW * 0.618;
+
+            container.innerHTML = `
+                <svg viewBox="0 0 ${viewW} ${viewH}" width="100%" height="150" style="max-width:400px">
+                    <!-- Tanque -->
+                    <rect x="10" y="10" width="${viewW - 20}" height="${viewH - 20}" fill="none" stroke="${color}" stroke-width="2"/>
+                    
+                    <!-- Linha Áurea Esquerda -->
+                    <line x1="${x1}" y1="10" x2="${x1}" y2="${viewH - 10}" stroke="${lineColor}" stroke-width="2" stroke-dasharray="5,3"/>
+                    <text x="${x1}" y="${viewH - 20}" fill="${lineColor}" font-size="12" text-anchor="middle" font-weight="bold">38.2%</text>
+                    
+                    <!-- Linha Áurea Direita -->
+                    <line x1="${x2}" y1="10" x2="${x2}" y2="${viewH - 10}" stroke="${lineColor}" stroke-width="2" stroke-dasharray="5,3"/>
+                    <text x="${x2}" y="${viewH - 20}" fill="${lineColor}" font-size="12" text-anchor="middle" font-weight="bold">61.8%</text>
+                    
+                    <!-- Legenda -->
+                    <text x="${viewW / 2}" y="${viewH / 2}" fill="${textColor}" font-size="12" text-anchor="middle" opacity="0.5">Pontos Focais</text>
+                </svg>
+            `;
+        };
+
+        // ========== CALCULADORA ÁGUA DOCE (Amônia) ==========
+        App.Modules.calcAmonia = function() {
+            // ... (código existente) ...
+            const total = parseFloat(document.getElementById('amoniaTotal').value) || 0;
+            const ph = parseFloat(document.getElementById('amoniaPh').value) || 7;
+            const temp = parseFloat(document.getElementById('amoniaTemp').value) || 25;
+
+            // Fórmula aproximada de Emerson (1975) para pKa
+            const tempKelvin = temp + 273.15;
+            const pKa = 0.09018 + (2729.92 / tempKelvin);
+            
+            // Fração de NH3 (não ionizada)
+            const fracao = 1 / (Math.pow(10, pKa - ph) + 1);
+            const toxica = total * fracao;
+
+            let status = 'Seguro';
+            let statusClass = 'status-ideal';
+
+            if (toxica >= 0.02 && toxica < 0.05) {
+                status = 'Alerta';
+                statusClass = 'status-warning';
+            } else if (toxica >= 0.05 && toxica < 0.2) {
+                status = 'Perigoso';
+                statusClass = 'status-danger';
+            } else if (toxica >= 0.2) {
+                status = 'Letal';
+                statusClass = 'status-danger';
+            }
+
+            // Exibir 4 casas decimais para precisão em baixas concentrações
+            document.getElementById('amoniaToxic').textContent = toxica.toFixed(4);
+            const statusEl = document.getElementById('amoniaStatus');
+            statusEl.textContent = status;
+            statusEl.className = statusClass;
+            
+            document.getElementById('amoniaResult').style.display = 'block';
+        };
+
+        // ========== CALCULADORA LABCOM (Atualizado) ==========
+        
+        // Produtos para TPA (Água Nova) com descrições detalhadas
+        const LABCOM_TPA_PRODUCTS = [
+            { 
+                name: "Anticloro", 
+                dosage: 2,
+                when: "Use para neutralizar cloro da água da torneira.",
+                result: "Torna a água segura instantaneamente."
+            },
+            { 
+                name: "Protect Plus", 
+                dosage: 2,
+                when: "Use se houver metais pesados ou para reduzir estresse.",
+                result: "Neutraliza cloro/metais e cria muco protetor."
+            },
+        ];
+
+        // Produtos para Tratamento (Volume Total) com descrições detalhadas
+        const LABCOM_TANK_PRODUCTS = [
+            { 
+                name: "Cristal", 
+                dosage: 2,
+                when: "Água turva ou esbranquiçada.",
+                result: "Aglutina partículas para o filtro capturar. Água cristalina."
+            },
+            { 
+                name: "Ictio", 
+                dosage: 0.5,
+                when: "Pontos brancos no corpo/nadadeiras.",
+                result: "Elimina parasitas. Aumente temp. para 28°C."
+            },
+            { 
+                name: "Aquavida", 
+                dosage: 0.5,
+                when: "Fungos (algodão), feridas ou nadadeiras roídas.",
+                result: "Ação fungicida e bactericida. Regenera tecidos."
+            },
+            { 
+                name: "Clean", 
+                dosage: 0.25,
+                when: "Excesso de algas verdes ou água verde.",
+                result: "Inibe algas. Aumente a aeração durante o uso."
+            },
+            { 
+                name: "Flora", 
+                dosage: 20/30,
+                when: "Fertilização semanal para plantas.",
+                result: "Nutrição essencial para crescimento vigoroso."
+            },
+        ];
+
+        // Nova Função Auxiliar para renderizar CARD de Produto
+        App.Modules.renderProductCard = function(prod, volume) {
+            const gotas = Math.ceil(volume * prod.dosage);
+            const ml = (volume * prod.dosage) / 20;
+            let mlDisplay = ml < 0.1 ? "< 0.1" : ml.toFixed(1);
+
+            return `
+                <div class="bg-gray-800 rounded-lg p-3 border border-gray-700 hover:border-gray-600 transition-colors">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="font-bold text-accent-primary text-base">${prod.name}</h4>
+                            <p class="text-xs text-gray-400 mt-0.5"><i class="fas fa-clock mr-1"></i>${prod.when}</p>
+                        </div>
+                        <div class="text-right pl-3">
+                            <div class="text-xl font-bold text-white leading-none">${gotas} <span class="text-xs font-normal text-gray-500">gt</span></div>
+                            <div class="text-xs text-gray-500 mt-1">${mlDisplay} mL</div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500 border-t border-gray-700 pt-2 flex items-start gap-1">
+                        <i class="fas fa-check text-success-color mt-0.5"></i>
+                        <span>${prod.result}</span>
+                    </div>
+                </div>
+            `;
+        };
+
+        // Cálculo TPA
+        App.Modules.calcLabComTpa = function() {
+            const volume = parseFloat(document.getElementById('labcomTpaVolume').value);
+            const resultDiv = document.getElementById('labcomTpaResult');
+            const emptyState = document.getElementById('labcomTpaEmpty');
+
+            if (!volume || volume <= 0) {
+                resultDiv.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = ''; // Limpa conteúdo anterior
+
+            LABCOM_TPA_PRODUCTS.forEach(prod => {
+                resultDiv.innerHTML += App.Modules.renderProductCard(prod, volume);
+            });
+        };
+
+        // Cálculo Tanque
+        App.Modules.calcLabComTank = function() {
+            const volume = parseFloat(document.getElementById('labcomVolume').value);
+            const resultDiv = document.getElementById('labcomListResult');
+            const emptyState = document.getElementById('labcomEmptyState');
+
+            if (!volume || volume <= 0) {
+                resultDiv.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = ''; // Limpa conteúdo anterior
+
+            LABCOM_TANK_PRODUCTS.forEach(prod => {
+                resultDiv.innerHTML += App.Modules.renderProductCard(prod, volume);
+            });
+        };
+
+        // Instruções de Testes Labcon com Escala de Cores
+        const TEST_INSTRUCTIONS = {
+            ph_tropical: {
+                title: "pH Tropical",
+                steps: [
+                    "1. Colete a água do aquário até a marca da proveta (5 ml).",
+                    "2. Pingue <strong>3 gotas</strong> da solução reagente.",
+                    "3. Tampe o tubo e agite.",
+                    "4. Compare a cor com a escala após 2 minutos."
+                ],
+                scale: [
+                    { color: "#FACC15", label: "6.2 (Ácido)" },
+                    { color: "#A3E635", label: "6.6" },
+                    { color: "#4ADE80", label: "7.0 (Neutro)" },
+                    { color: "#38BDF8", label: "7.2" },
+                    { color: "#6366F1", label: "7.5 (Alc.)" }
+                ]
+            },
+            ph_ciclideos: {
+                title: "pH Ciclídeos/Marinho",
+                steps: [
+                    "1. Colete a água do aquário até a marca da proveta (5 ml).",
+                    "2. Pingue <strong>3 gotas</strong> da solução reagente.",
+                    "3. Tampe e agite.",
+                    "4. Compare a cor imediatamente."
+                ],
+                scale: [
+                    { color: "#FDE047", label: "7.2" },
+                    { color: "#FDBA74", label: "7.5" },
+                    { color: "#FB923C", label: "7.8" },
+                    { color: "#F472B6", label: "8.2" },
+                    { color: "#C084FC", label: "9.0" }
+                ]
+            },
+            amonia: {
+                title: "Amônia Tóxica (Total)",
+                steps: [
+                    "1. Colete 5 ml de água na proveta.",
+                    "2. Pingue <strong>8 gotas</strong> do Reagente 1.",
+                    "3. Pingue <strong>4 gotas</strong> do Reagente 2.",
+                    "4. Agite e aguarde <strong>10 minutos</strong> para leitura."
+                ],
+                scale: [
+                    { color: "#FEF08A", label: "0.00 ppm" },
+                    { color: "#BBF7D0", label: "0.25 ppm" },
+                    { color: "#4ADE80", label: "1.00 ppm" },
+                    { color: "#16A34A", label: "2.00 ppm" },
+                    { color: "#155E75", label: "6.50 ppm" }
+                ]
+            },
+            nitrito: {
+                title: "Nitrito",
+                steps: [
+                    "1. Colete 5 ml de água na proveta.",
+                    "2. Pingue <strong>1 gota</strong> do Reagente 1.",
+                    "3. Pingue <strong>1 gota</strong> do Reagente 2.",
+                    "4. Agite e aguarde <strong>10 minutos</strong> para leitura."
+                ],
+                scale: [
+                    { color: "#FEF08A", label: "0.00 ppm" },
+                    { color: "#FBCFE8", label: "0.25 ppm" },
+                    { color: "#F472B6", label: "0.50 ppm" },
+                    { color: "#E879F9", label: "1.00 ppm" },
+                    { color: "#A855F7", label: "2.50+ ppm" }
+                ]
+            },
+            cloro: {
+                title: "Cloro",
+                steps: [
+                    "1. Colete a água até a marca da proveta (5 ml).",
+                    "2. Pingue <strong>3 gotas</strong> da solução reagente.",
+                    "3. Agite e observe.",
+                    "4. Coloração amarela indica presença de Cloro."
+                ],
+                scale: [
+                    { color: "#FFFFFF", label: "Sem Cloro", border: true },
+                    { color: "#FEF08A", label: "Com Cloro" }
+                ]
+            },
+            kh: {
+                title: "Dureza Carbonatos (KH)",
+                steps: [
+                    "1. Colete 5 ml de água.",
+                    "2. Pingue gota a gota, agitando a cada gota.",
+                    "3. Conte as gotas até a cor mudar de <strong>Azul para Amarelo</strong>.",
+                    "4. Cada gota corresponde a 1 grau dKH."
+                ],
+                scale: [
+                    { color: "#60A5FA", label: "Início (Azul)" },
+                    { color: "#FACC15", label: "Fim (Amarelo)" }
+                ]
+            },
+            gh: {
+                title: "Dureza Total (GH)",
+                steps: [
+                    "1. Colete 5 ml de água.",
+                    "2. Pingue gota a gota, agitando a cada gota.",
+                    "3. Conte as gotas até a cor mudar de <strong>Rosa para Azul</strong>.",
+                    "4. Cada gota corresponde a 1 grau dGH."
+                ],
+                scale: [
+                    { color: "#F472B6", label: "Início (Rosa)" },
+                    { color: "#60A5FA", label: "Fim (Azul)" }
+                ]
+            }
+        };
+
+        App.Modules.showTestInstructions = function() {
+            const testKey = document.getElementById('testSelect').value;
+            const data = TEST_INSTRUCTIONS[testKey];
+            const container = document.getElementById('testInstructions');
+
+            if (data) {
+                const stepsHtml = data.steps.map(step => `<li class="mb-2 text-gray-300 text-sm">${step}</li>`).join('');
+                
+                // Gerar HTML da escala de cores
+                let scaleHtml = '';
+                if (data.scale) {
+                    const colorsHtml = data.scale.map(item => `
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-8 rounded mb-1 shadow-sm" style="background-color: ${item.color}; ${item.border ? 'border: 1px solid #4B5563;' : ''}"></div>
+                            <span class="text-xs text-gray-400 text-center leading-tight">${item.label}</span>
+                        </div>
+                    `).join('');
+                    
+                    scaleHtml = `
+                        <div class="mt-4 pt-4 border-t border-gray-700">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Referência de Cores</h5>
+                            <div class="flex flex-wrap gap-3 justify-start">
+                                ${colorsHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = `
+                    <h4 class="font-bold text-accent-primary mb-3">${data.title}</h4>
+                    <ul class="list-none pl-0">
+                        ${stepsHtml}
+                    </ul>
+                    ${scaleHtml}
+                `;
+            }
+        };
+
+        App.Modules.calcPlanejamento = function() {
+            // Pega o volume da caixa de cima (se preenchido) ou pede input
+            let volume = parseFloat(document.getElementById('labcomVolume').value);
+            
+            // Se não tiver volume lá em cima, tenta achar um jeito ou alerta
+            // Para simplificar, vamos assumir que o usuário preenche o volume principal
+            if (!volume || volume <= 0) {
+                // Tenta buscar de inputs antigos se existirem ou alerta
+                alert("Por favor, insira o Volume do Aquário no campo acima (Dosagens Rápidas).");
+                document.getElementById('labcomVolume').focus();
+                return;
+            }
+            
+            const fator = parseFloat(document.getElementById('planProduto').value);
+            const doseUnicaMl = (volume * fator) / 20;
+
+            const dias = parseFloat(document.getElementById('planDias').value) || 0;
+            const intervalo = parseFloat(document.getElementById('planIntervalo').value) || 24;
+
+            if (dias === 0) return;
+
+            const aplicacoes = Math.ceil((dias * 24) / intervalo);
+            const totalMl = doseUnicaMl * aplicacoes;
+
+            document.getElementById('planAplicacoes').textContent = aplicacoes;
+            document.getElementById('planTotalProduto').textContent = totalMl.toFixed(1);
+            document.getElementById('planResult').style.display = 'block';
+        };
+
+        // ========== CALCULADORAS ÁGUA DOCE (Existentes) ==========
+        App.Modules.calcCO2 = function() {
+            const pH = parseFloat(document.getElementById('co2pH').value) || 0;
+            const KH = parseFloat(document.getElementById('co2KH').value) || 0;
+            
+            const co2 = 3 * KH * Math.pow(10, 7 - pH);
+            
+            let status = 'Baixo';
+            let statusClass = 'status-danger';
+            
+            if (co2 >= 20 && co2 <= 30) {
+                status = 'Ideal para plantas';
+                statusClass = 'status-ideal';
+            } else if (co2 > 30) {
+                status = 'Alto';
+                statusClass = 'status-warning';
+            }
+            
+            document.getElementById('co2Value').textContent = co2.toFixed(2);
+            document.getElementById('co2Status').textContent = status;
+            document.getElementById('co2Status').className = statusClass;
+            document.getElementById('co2Result').style.display = 'block';
+        };
+
+        App.Modules.calcMistura = function() {
+            const volTorneira = parseFloat(document.getElementById('mixtVolTorneira').value) || 0;
+            const volOsmose = parseFloat(document.getElementById('mixtVolOsmose').value) || 0;
+            const ghTorneira = parseFloat(document.getElementById('mixtGHTorneira').value) || 0;
+            const khTorneira = parseFloat(document.getElementById('mixtKHTorneira').value) || 0;
+            
+            const ghFinal = (ghTorneira * volTorneira) / (volTorneira + volOsmose);
+            const khFinal = (khTorneira * volTorneira) / (volTorneira + volOsmose);
+            const volTotal = volTorneira + volOsmose;
+            
+            document.getElementById('mixtGHFinal').textContent = ghFinal.toFixed(2);
+            document.getElementById('mixtKHFinal').textContent = khFinal.toFixed(2);
+            document.getElementById('mixtVolTotal').textContent = volTotal.toFixed(2);
+            document.getElementById('mixtResult').style.display = 'block';
+        };
+
+        App.Modules.calcFertilizantes = function() {
+            const volume = parseFloat(document.getElementById('fertVolume').value) || 0;
+            const dose = parseFloat(document.getElementById('fertDose').value) || 0;
+            const frequencia = document.getElementById('fertFrequencia').value;
+            
+            const dosagem = (volume * dose) / 1000;
+            
+            document.getElementById('fertDosagem').textContent = dosagem.toFixed(2);
+            document.getElementById('fertFrequenciaResult').textContent = frequencia.charAt(0).toUpperCase() + frequencia.slice(1);
+            document.getElementById('fertResult').style.display = 'block';
+        };
+
+        App.Modules.calcCargaBiologica = function() {
+            const volume = parseFloat(document.getElementById('bioVolume').value) || 0;
+            const filtro = document.getElementById('bioFiltro').value;
+            
+            let cmPorLitro = 1;
+            if (filtro === 'medio') cmPorLitro = 2;
+            if (filtro === 'avancado') cmPorLitro = 3;
+            
+            const comprimento = volume * cmPorLitro;
+            const quantidade = Math.floor(comprimento / 5); // Assumindo peixes médios de 5cm
+            
+            document.getElementById('bioComprimento').textContent = comprimento.toFixed(0);
+            document.getElementById('bioQuantidade').textContent = quantidade;
+            document.getElementById('bioResult').style.display = 'block';
+        };
+
+        App.Modules.calcUV = function() {
+            const volume = parseFloat(document.getElementById('uvVolume').value) || 0;
+            const ciclos = parseFloat(document.getElementById('uvCiclos').value) || 3;
+            
+            const vazao = (volume * ciclos) / 24;
+            const potencia = vazao / 10; // Aproximadamente 10L/h por watt
+            
+            document.getElementById('uvVazao').textContent = vazao.toFixed(2);
+            document.getElementById('uvPotencia').textContent = Math.ceil(potencia);
+            document.getElementById('uvResult').style.display = 'block';
+        };
+
+        // ========== CALCULADORAS ÁGUA SALGADA ==========
+        App.Modules.calcSalinidade = function() {
+            const volume = parseFloat(document.getElementById('salinVolume').value) || 0;
+            const densidade = parseFloat(document.getElementById('salinDensidade').value) || 1.026;
+            
+            const sal = volume * (densidade - 1) * 35;
+            const ppt = (densidade - 1) * 35;
+            
+            document.getElementById('salinSal').textContent = sal.toFixed(2);
+            document.getElementById('salinPPT').textContent = ppt.toFixed(2);
+            document.getElementById('salinResult').style.display = 'block';
+        };
+
+        App.Modules.calcCorrecaoSalinidade = function() {
+            const volume = parseFloat(document.getElementById('corrVolume').value) || 0;
+            const atual = parseFloat(document.getElementById('corrDensidadeAtual').value) || 1.023;
+            const alvo = parseFloat(document.getElementById('corrDensidadeAlvo').value) || 1.026;
+            
+            const diferenca = alvo - atual;
+            const salgada = (volume * diferenca) / 0.003;
+            const doce = salgada * 0.5;
+            
+            document.getElementById('corrSalgada').textContent = Math.max(0, salgada).toFixed(2);
+            document.getElementById('corrDoce').textContent = Math.max(0, doce).toFixed(2);
+            document.getElementById('corrResult').style.display = 'block';
+        };
+
+        App.Modules.calcRochaViva = function() {
+            const volume = parseFloat(document.getElementById('rochaVolume').value) || 0;
+            const proporcao = parseFloat(document.getElementById('rochaProporcao').value) || 1.5;
+            
+            const quantidade = volume * proporcao;
+            const volumeUtil = volume * 0.7;
+            
+            document.getElementById('rochaQuantidade').textContent = quantidade.toFixed(2);
+            document.getElementById('rochaVolumeUtil').textContent = volumeUtil.toFixed(2);
+            document.getElementById('rochaResult').style.display = 'block';
+        };
+
+        App.Modules.calcSump = function() {
+            const display = parseFloat(document.getElementById('sumpDisplay').value) || 0;
+            const percentual = parseFloat(document.getElementById('sumpPercentual').value) || 20;
+            const margem = parseFloat(document.getElementById('sumpMargem').value) || 10;
+            
+            const sump = (display * percentual) / 100;
+            const espaco = (sump * margem) / 100;
+            
+            document.getElementById('sumpVolume').textContent = sump.toFixed(2);
+            document.getElementById('sumpEspaco').textContent = espaco.toFixed(2);
+            document.getElementById('sumpResult').style.display = 'block';
+        };
+
+        App.Modules.calcSkimmer = function() {
+            const volume = parseFloat(document.getElementById('skimVolume').value) || 0;
+            const carga = document.getElementById('skimCarga').value;
+            
+            let capacidade = 0;
+            let modelo = '';
+            
+            if (carga === 'baixa') {
+                capacidade = volume / 100 * 500;
+                modelo = 'Pequeno (500-1000 L/h)';
+            } else if (carga === 'media') {
+                capacidade = volume / 75 * 800;
+                modelo = 'Médio (800-1500 L/h)';
+            } else if (carga === 'alta') {
+                capacidade = volume / 50 * 1200;
+                modelo = 'Grande (1200-2000 L/h)';
+            }
+            
+            document.getElementById('skimCapacidade').textContent = capacidade.toFixed(0);
+            document.getElementById('skimModelo').textContent = modelo;
+            document.getElementById('skimResult').style.display = 'block';
+        };
+
+        App.Modules.calcAlcalinidade = function() {
+            const volume = parseFloat(document.getElementById('alcVolume').value) || 0;
+            const atual = parseFloat(document.getElementById('alcAtual').value) || 0;
+            const alvo = parseFloat(document.getElementById('alcAlvo').value) || 0;
+            
+            const diferenca = alvo - atual;
+            const dosagem = (volume * diferenca * 17.9) / 1000;
+            const duracao = 30 / Math.max(1, diferenca);
+            
+            document.getElementById('alcDosagem').textContent = dosagem.toFixed(2);
+            document.getElementById('alcDuracao').textContent = duracao.toFixed(0);
+            document.getElementById('alcResult').style.display = 'block';
+        };
+
+        App.Modules.calcEvaporacao = function() {
+            const volume = parseFloat(document.getElementById('evapVolume').value) || 0;
+            const diaria = parseFloat(document.getElementById('evapDiaria').value) || 2;
+            const periodo = document.getElementById('evapPeriodo').value;
+            
+            const reposicao = periodo === 'diaria' ? (volume * diaria) / 100 : (volume * diaria * 7) / 100;
+            const reservatorio = reposicao * 7;
+            
+            document.getElementById('evapReposicao').textContent = reposicao.toFixed(2);
+            document.getElementById('evapReservatorio').textContent = reservatorio.toFixed(2);
+            document.getElementById('evapResult').style.display = 'block';
+        };
+
+        App.Modules.calcCirculacao = function() {
+            const volume = parseFloat(document.getElementById('circVolume').value) || 0;
+            const multiplo = parseFloat(document.getElementById('circMultiplo').value) || 20;
+            
+            const vazao = volume * multiplo;
+            const bombas = Math.ceil(vazao / 1000);
+            
+            document.getElementById('circVazao').textContent = vazao.toFixed(0);
+            document.getElementById('circBombas').textContent = bombas;
+            document.getElementById('circResult').style.display = 'block';
+        };
+
+        // ========== CALCULADORAS ÁGUA SALOBRA ==========
+        App.Modules.calcSalobra = function() {
+            const volume = parseFloat(document.getElementById('salobVolume').value) || 0;
+            const densidade = parseFloat(document.getElementById('salobDensidade').value) || 1.010;
+            
+            const sal = volume * (densidade - 1) * 35;
+            const ppt = (densidade - 1) * 35;
+            
+            document.getElementById('salobSal').textContent = sal.toFixed(2);
+            document.getElementById('salobPPT').textContent = ppt.toFixed(2);
+            document.getElementById('salobResult').style.display = 'block';
+        };
+
+        App.Modules.calcAjusteGradual = function() {
+            const volume = parseFloat(document.getElementById('ajustVolume').value) || 0;
+            const atual = parseFloat(document.getElementById('ajustAtual').value) || 1.000;
+            const alvo = parseFloat(document.getElementById('ajustAlvo').value) || 1.015;
+            const semanas = parseFloat(document.getElementById('ajustSemanas').value) || 4;
+            
+            const diferenca = alvo - atual;
+            const incrementoSemanal = diferenca / semanas;
+            const salPorSemana = volume * incrementoSemanal * 35;
+            
+            document.getElementById('ajustSal').textContent = salPorSemana.toFixed(2);
+            document.getElementById('ajustIncremento').textContent = incrementoSemanal.toFixed(4);
+            document.getElementById('ajustResult').style.display = 'block';
+        };
+
+        App.Modules.calcMisturaSalobra = function() {
+            const volTotal = parseFloat(document.getElementById('mistVolTotal').value) || 0;
+            const percentDoce = parseFloat(document.getElementById('mistPercentDoce').value) || 50;
+            const densidadeSalgada = parseFloat(document.getElementById('mistDensidadeSalgada').value) || 1.026;
+            
+            const volDoce = (volTotal * percentDoce) / 100;
+            const volSalgada = volTotal - volDoce;
+            const densidadeFinal = 1 + ((volSalgada / volTotal) * (densidadeSalgada - 1));
+            
+            document.getElementById('mistVolDoce').textContent = volDoce.toFixed(2);
+            document.getElementById('mistVolSalgada').textContent = volSalgada.toFixed(2);
+            document.getElementById('mistDensidadeFinal').textContent = densidadeFinal.toFixed(3);
+            document.getElementById('mistResult').style.display = 'block';
+        };
+
+        App.Modules.calcCompatibilidade = function() {
+            const pH = parseFloat(document.getElementById('compatPH').value) || 7.5;
+            const gh = parseFloat(document.getElementById('compatGH').value) || 12;
+            const salinidade = parseFloat(document.getElementById('compatSalinidade').value) || 15;
+            const especie = document.getElementById('compatEspecie').value;
+            
+            let statusPH = 'Fora da faixa';
+            let statusGH = 'Fora da faixa';
+            let statusSal = 'Fora da faixa';
+            let recomendacao = 'Ajuste os parâmetros';
+            
+            if (especie === 'molinesia') {
+                statusPH = (pH >= 7 && pH <= 8.5) ? 'Ideal' : 'Ajustar';
+                statusGH = (gh >= 10 && gh <= 25) ? 'Ideal' : 'Ajustar';
+                statusSal = (salinidade >= 5 && salinidade <= 30) ? 'Ideal' : 'Ajustar';
+            } else if (especie === 'baiacu') {
+                statusPH = (pH >= 7.5 && pH <= 8.5) ? 'Ideal' : 'Ajustar';
+                statusGH = (gh >= 12 && gh <= 30) ? 'Ideal' : 'Ajustar';
+                statusSal = (salinidade >= 10 && salinidade <= 35) ? 'Ideal' : 'Ajustar';
+            }
+            
+            if (statusPH === 'Ideal' && statusGH === 'Ideal' && statusSal === 'Ideal') {
+                recomendacao = 'Parâmetros ideais para a espécie!';
+            }
+            
+            document.getElementById('compatStatusPH').textContent = statusPH;
+            document.getElementById('compatStatusGH').textContent = statusGH;
+            document.getElementById('compatStatusSal').textContent = statusSal;
+            document.getElementById('compatRecomendacao').textContent = recomendacao;
+            document.getElementById('compatResult').style.display = 'block';
+        };
+
+        // ========== CONVERSORES ==========
+        App.Modules.converter = function(tipo) {
+            if (tipo === 'volume') {
+                const valor = parseFloat(document.getElementById('convVolValue').value) || 0;
+                const de = document.getElementById('convVolFrom').value;
+                const para = document.getElementById('convVolTo').value;
+                
+                const conversoes = {
+                    'litros': 1,
+                    'ml': 0.001,
+                    'gal-us': 3.78541,
+                    'gal-uk': 4.54609,
+                    'oz': 0.0295735
+                };
+                
+                const emLitros = valor * conversoes[de];
+                const resultado = emLitros / conversoes[para];
+                
+                document.getElementById('convVolResult').textContent = resultado.toFixed(4);
+            } else if (tipo === 'temperatura') {
+                const valor = parseFloat(document.getElementById('convTempValue').value) || 0;
+                const de = document.getElementById('convTempFrom').value;
+                const para = document.getElementById('convTempTo').value;
+                
+                let celsius = valor;
+                if (de === 'fahrenheit') celsius = (valor - 32) * 5/9;
+                if (de === 'kelvin') celsius = valor - 273.15;
+                
+                let resultado = celsius;
+                if (para === 'fahrenheit') resultado = (celsius * 9/5) + 32;
+                if (para === 'kelvin') resultado = celsius + 273.15;
+                
+                document.getElementById('convTempResult').textContent = resultado.toFixed(2);
+            } else if (tipo === 'comprimento') {
+                const valor = parseFloat(document.getElementById('convLengthValue').value) || 0;
+                const de = document.getElementById('convLengthFrom').value;
+                const para = document.getElementById('convLengthTo').value;
+                
+                const conversoes = {
+                    'cm': 1,
+                    'm': 100,
+                    'mm': 0.1,
+                    'in': 2.54,
+                    'ft': 30.48
+                };
+                
+                const emCm = valor * conversoes[de];
+                const resultado = emCm / conversoes[para];
+                
+                document.getElementById('convLengthResult').textContent = resultado.toFixed(4);
+            } else if (tipo === 'dureza') {
+                const valor = parseFloat(document.getElementById('convHardValue').value) || 0;
+                const de = document.getElementById('convHardFrom').value;
+                const para = document.getElementById('convHardTo').value;
+                
+                const conversoes = {
+                    'dkh': 1,
+                    'ppm': 17.848,
+                    'dgh': 1.4,
+                    'fh': 2.8
+                };
+                
+                const emDKH = valor * conversoes[de];
+                const resultado = emDKH / conversoes[para];
+                
+                document.getElementById('convHardResult').textContent = resultado.toFixed(4);
+            }
+        };
+
+        // ========== EVENT LISTENERS ==========
+        // Header Navigation Buttons - Navegação Direta
+        document.querySelectorAll('.nav-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const section = this.getAttribute('data-section');
+                const category = this.getAttribute('data-category');
+                
+                // Remove active class from all nav buttons
+                document.querySelectorAll('.nav-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Navegação direta para categorias ou seções
+                if (category) {
+                    // Apontar diretamente para a categoria
+                    App.UI.switchCategory(category);
+                } else if (section) {
+                    // Apontar diretamente para a seção (Conversores, Configuração, Ajuda)
+                    App.UI.switchSection(section);
+                }
+            });
+        });
+
+        // ========== INICIALIZAÇÃO ==========
+        window.addEventListener('DOMContentLoaded', function() {
+            App.UI.loadConfig();
+            
+            // Inicializar estado do seletor de volume
+            if(document.getElementById('volumeType')) {
+                App.Modules.onVolumeTypeChange();
+            }
+            
+            // Inicializar instruções de teste
+            if(document.getElementById('testSelect')) {
+                App.Modules.showTestInstructions();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -116,8 +116,12 @@
                 </div>
             </div>
             
-            <!-- Controls (Optional space for future header actions) -->
-            <div></div>
+            <!-- Controls: seletor de aquários -->
+            <div class="flex items-center gap-2">
+                <select id="tankSwitcher" onchange="App.switchTank(this.value)" class="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-200 max-w-[160px] focus:border-water-500 focus:outline-none" title="Trocar de aquário"></select>
+                <button onclick="Modules.Tanks.openNew()" class="w-7 h-7 flex items-center justify-center bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-300 hover:text-white transition" title="Novo aquário"><i class="fa-solid fa-plus text-xs"></i></button>
+                <button onclick="Modules.Tanks.open()" class="w-7 h-7 flex items-center justify-center bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-300 hover:text-white transition" title="Gerenciar aquários"><i class="fa-solid fa-list text-xs"></i></button>
+            </div>
         </div>
 
         <!-- Row 2: Categories / Navigation -->
@@ -288,7 +292,7 @@
     <!-- Footer -->
     <footer class="bg-gray-950 border-t border-gray-700 py-3 px-6 text-xs text-gray-400 flex flex-col sm:flex-row justify-between items-center shrink-0 gap-2">
         <div class="flex items-center gap-4">
-            <span><span class="font-mono">v6.0.0</span> | Modificado: <span id="lastModDate"></span></span>
+            <span><span class="font-mono">v6.1.0</span> | Modificado: <span id="lastModDate"></span></span>
         </div>
         
         <a href="https://ccarvalho.net/meapoie.html" target="_blank" class="text-water-400 hover:text-water-300 hover:underline flex items-center gap-1 transition-colors">
@@ -312,9 +316,16 @@
     <script>
         // --- CONFIG & STATE ---
         const CONFIG = {
+            // Chaves antigas (single-tank), mantidas só para detectar/migrar dados
+            // de quem já usava o Aquazen antes do suporte a múltiplos aquários.
             storageKeyLogs: 'aqua_logs',
             storageKeyConfig: 'aqua_config',
             storageKeyInventory: 'aqua_inventory',
+            // Registro de aquários e qual está ativo. Os dados de cada aquário
+            // ficam em chaves próprias: aqua_logs_<id>, aqua_inventory_<id>,
+            // aqua_config_<id> (ver Store._logsKey/_invKey/_configKey).
+            storageKeyTanks: 'aqua_tanks',
+            storageKeyActiveTank: 'aqua_active_tank',
             defaultConfig: {
                 tankName: 'Tanque Principal',
                 tankOwner: '',
@@ -376,12 +387,56 @@
 
         const Store = {
             logs: [], inventory: [], config: {},
+            tanks: [], activeTankId: null,
+
+            _logsKey(id) { return `aqua_logs_${id}`; },
+            _invKey(id) { return `aqua_inventory_${id}`; },
+            _configKey(id) { return `aqua_config_${id}`; },
+            _freshDefaultConfig() {
+                // Clona os defaults a cada uso: deepMerge muta o objeto que recebe,
+                // então reaproveitar CONFIG.defaultConfig direto entre aquários
+                // diferentes vazaria valores salvos de um aquário para o outro.
+                return JSON.parse(JSON.stringify(CONFIG.defaultConfig));
+            },
+
             init() {
-                this.logs = JSON.parse(localStorage.getItem(CONFIG.storageKeyLogs)) || [];
-                this.inventory = JSON.parse(localStorage.getItem(CONFIG.storageKeyInventory)) || [];
-                const saved = JSON.parse(localStorage.getItem(CONFIG.storageKeyConfig)) || {};
-                this.config = this.deepMerge(CONFIG.defaultConfig, saved);
-                
+                this.tanks = JSON.parse(localStorage.getItem(CONFIG.storageKeyTanks)) || [];
+                this.activeTankId = localStorage.getItem(CONFIG.storageKeyActiveTank);
+
+                if (this.tanks.length === 0) {
+                    this._migrateOrCreateFirstTank();
+                }
+                if (!this.activeTankId || !this.tanks.includes(this.activeTankId)) {
+                    this.activeTankId = this.tanks[0];
+                    localStorage.setItem(CONFIG.storageKeyActiveTank, this.activeTankId);
+                }
+                this._loadActiveTankData();
+            },
+
+            // Cria o primeiro aquário. Se o navegador já tinha dados de uma versão
+            // anterior (single-tank), eles são copiados para esse aquário em vez de
+            // descartados — ninguém perde histórico ao atualizar o Aquazen.
+            _migrateOrCreateFirstTank() {
+                const id = crypto.randomUUID();
+                const legacyConfig = localStorage.getItem(CONFIG.storageKeyConfig);
+                if (legacyConfig) {
+                    const legacyLogs = localStorage.getItem(CONFIG.storageKeyLogs);
+                    const legacyInv = localStorage.getItem(CONFIG.storageKeyInventory);
+                    localStorage.setItem(this._configKey(id), legacyConfig);
+                    if (legacyLogs) localStorage.setItem(this._logsKey(id), legacyLogs);
+                    if (legacyInv) localStorage.setItem(this._invKey(id), legacyInv);
+                }
+                this.tanks = [id];
+                localStorage.setItem(CONFIG.storageKeyTanks, JSON.stringify(this.tanks));
+                localStorage.setItem(CONFIG.storageKeyActiveTank, id);
+            },
+
+            _loadActiveTankData() {
+                this.logs = JSON.parse(localStorage.getItem(this._logsKey(this.activeTankId))) || [];
+                this.inventory = JSON.parse(localStorage.getItem(this._invKey(this.activeTankId))) || [];
+                const saved = JSON.parse(localStorage.getItem(this._configKey(this.activeTankId))) || {};
+                this.config = this.deepMerge(this._freshDefaultConfig(), saved);
+
                 // Defaults safeguards
                 if(!Array.isArray(this.config.maintenance)) this.config.maintenance = CONFIG.defaultConfig.maintenance;
                 if(this.config.maintenanceRefDay === undefined) this.config.maintenanceRefDay = 0;
@@ -396,6 +451,60 @@
                 if(this.config.tankStyle === undefined) this.config.tankStyle = 'comunitario';
                 if(this.config.geminiKey === undefined) this.config.geminiKey = '';
             },
+
+            switchTank(id) {
+                if (!this.tanks.includes(id) || id === this.activeTankId) return false;
+                this.activeTankId = id;
+                localStorage.setItem(CONFIG.storageKeyActiveTank, id);
+                this._loadActiveTankData();
+                return true;
+            },
+
+            createTank(name) {
+                const id = crypto.randomUUID();
+                const cfg = this._freshDefaultConfig();
+                cfg.tankName = name || 'Novo Aquário';
+                localStorage.setItem(this._configKey(id), JSON.stringify(cfg));
+                this.tanks.push(id);
+                localStorage.setItem(CONFIG.storageKeyTanks, JSON.stringify(this.tanks));
+                this.activeTankId = id;
+                localStorage.setItem(CONFIG.storageKeyActiveTank, id);
+                this._loadActiveTankData();
+                return id;
+            },
+
+            renameTank(id, name) {
+                const raw = localStorage.getItem(this._configKey(id));
+                const cfg = raw ? JSON.parse(raw) : this._freshDefaultConfig();
+                cfg.tankName = name;
+                localStorage.setItem(this._configKey(id), JSON.stringify(cfg));
+                if (id === this.activeTankId) this.config.tankName = name;
+            },
+
+            // Nunca deixa zero aquários: se o ativo for excluído, troca para outro.
+            deleteTank(id) {
+                if (this.tanks.length <= 1) return false;
+                this.tanks = this.tanks.filter(t => t !== id);
+                localStorage.setItem(CONFIG.storageKeyTanks, JSON.stringify(this.tanks));
+                localStorage.removeItem(this._logsKey(id));
+                localStorage.removeItem(this._invKey(id));
+                localStorage.removeItem(this._configKey(id));
+                if (id === this.activeTankId) {
+                    this.activeTankId = this.tanks[0];
+                    localStorage.setItem(CONFIG.storageKeyActiveTank, this.activeTankId);
+                    this._loadActiveTankData();
+                }
+                return true;
+            },
+
+            getTankName(id) {
+                try {
+                    const raw = localStorage.getItem(this._configKey(id));
+                    if (raw) return JSON.parse(raw).tankName || 'Aquário sem nome';
+                } catch (e) { /* ignore e usa o fallback abaixo */ }
+                return 'Aquário sem nome';
+            },
+
             deepMerge(target, source) {
                 for (const key in source) {
                     if (source[key] instanceof Object && key in target && !Array.isArray(source[key])) {
@@ -421,18 +530,18 @@
                     return false;
                 }
             },
-            saveLogs() { 
-                if (this.saveToStorage(CONFIG.storageKeyLogs, this.logs)) {
-                    App.renderTable(); 
+            saveLogs() {
+                if (this.saveToStorage(this._logsKey(this.activeTankId), this.logs)) {
+                    App.renderTable();
                     return true;
                 }
                 return false;
             },
-            saveInventory() { 
-                return this.saveToStorage(CONFIG.storageKeyInventory, this.inventory); 
+            saveInventory() {
+                return this.saveToStorage(this._invKey(this.activeTankId), this.inventory);
             },
-            saveConfig() { 
-                if (this.saveToStorage(CONFIG.storageKeyConfig, this.config)) {
+            saveConfig() {
+                if (this.saveToStorage(this._configKey(this.activeTankId), this.config)) {
                     App.updateHeader(); App.applyTheme(); App.renderTable(); App.checkAlerts();
                     return true;
                 }
@@ -441,7 +550,7 @@
             // Backup functionality
             exportData() {
                 const data = {
-                    version: '6.0.0',
+                    version: '6.1.0',
                     timestamp: new Date().toISOString(),
                     logs: this.logs,
                     inventory: this.inventory,
@@ -474,9 +583,10 @@
                         throw new Error('Backup inválido: "inventory" não é uma lista.');
                     }
 
-                    localStorage.setItem(CONFIG.storageKeyLogs, JSON.stringify(data.logs));
-                    localStorage.setItem(CONFIG.storageKeyInventory, JSON.stringify(data.inventory || []));
-                    localStorage.setItem(CONFIG.storageKeyConfig, JSON.stringify(data.config));
+                    // Restaura sempre no aquário atualmente ativo (não mexe nos outros aquários).
+                    localStorage.setItem(this._logsKey(this.activeTankId), JSON.stringify(data.logs));
+                    localStorage.setItem(this._invKey(this.activeTankId), JSON.stringify(data.inventory || []));
+                    localStorage.setItem(this._configKey(this.activeTankId), JSON.stringify(data.config));
 
                     return true;
                 } catch (e) {
@@ -620,8 +730,9 @@
                 this.updateHeader();
                 this.applyTheme();
                 this.renderChecklist();
+                this.populateTankSwitcher();
                 this.checkAutoBackup();
-                
+
                 // Date Setup & Validation Limit
                 const dateInput = document.querySelector('input[name="date"]');
                 const today = new Date();
@@ -644,6 +755,28 @@
                 const water = Store.config.waterType ? ` <span class="text-gray-500 text-sm font-normal">(${waterLabels[Store.config.waterType] || Utils.escapeHtml(Store.config.waterType)})</span>` : '';
                 const display = owner ? `${tankName}${water} <span class="text-gray-600 mx-1">-</span> ${owner}` : `${tankName}${water}`;
                 document.getElementById('headerTankName').innerHTML = display;
+            },
+            // Preenche o seletor de aquários no cabeçalho com todos os aquários
+            // cadastrados, marcando o ativo.
+            populateTankSwitcher() {
+                const sel = document.getElementById('tankSwitcher');
+                if (!sel) return;
+                sel.innerHTML = Store.tanks.map(id =>
+                    `<option value="${id}" ${id === Store.activeTankId ? 'selected' : ''}>${Utils.escapeHtml(Store.getTankName(id))}</option>`
+                ).join('');
+            },
+            // Troca o aquário ativo e atualiza toda a tela para refletir os dados
+            // (registros, inventário, configurações) do aquário selecionado.
+            switchTank(id) {
+                if (!Store.switchTank(id)) return;
+                this.updateHeader();
+                this.applyTheme();
+                this.renderChecklist();
+                this.renderTable();
+                this.checkAlerts();
+                this.populateTankSwitcher();
+                this.switchView('dashboard');
+                UI.showToast(`Aquário "${Store.config.tankName}" selecionado.`, 'success');
             },
             applyTheme() {
                 document.body.className = "flex flex-col h-screen overflow-hidden text-sm selection:bg-water-500 selection:text-white " + 
@@ -1608,7 +1741,7 @@
                                                 <i class="fa-solid fa-upload"></i> Restaurar Backup
                                             </button>
                                         </div>
-                                        <p class="text-[9px] text-gray-500 text-center">Atenção: Restaurar um backup substituirá todos os dados atuais.</p>
+                                        <p class="text-[9px] text-gray-500 text-center">Atenção: Restaurar um backup substitui os dados do aquário atual (${Utils.escapeHtml(c.tankName)}). Os outros aquários não são afetados.</p>
                                     </div>
                                 </section>
                             </div>
@@ -1631,7 +1764,7 @@
                     const reader = new FileReader();
                     reader.onload = async function(e) {
                         const content = e.target.result;
-                        if (await UI.showConfirm('Tem certeza? Todos os dados atuais serão perdidos.')) {
+                        if (await UI.showConfirm('Tem certeza? Todos os dados do aquário atual serão perdidos (os outros aquários não são afetados).')) {
                             if (Store.importData(content)) {
                                 UI.showToast('Backup restaurado com sucesso! Recarregando...', 'success');
                                 setTimeout(() => location.reload(), 1500);
@@ -1952,6 +2085,109 @@
                             </div>
                         </div>`;
                     UI.openModal(html);
+                }
+            },
+            Tanks: {
+                openNew() {
+                    UI.openModal(`
+                        <div class="bg-gray-800 p-6 rounded border border-gray-600 w-full max-w-sm">
+                            <h3 class="text-white font-bold mb-4"><i class="fa-solid fa-plus text-water-400 mr-2"></i> Novo Aquário</h3>
+                            <label class="text-xs text-gray-400">Nome do Aquário</label>
+                            <input id="newTankName" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white mb-4 mt-1" placeholder="Ex: Tanque da Sala">
+                            <div class="flex gap-2">
+                                <button onclick="UI.closeModal()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded">Cancelar</button>
+                                <button onclick="Modules.Tanks.createFromModal()" class="flex-1 bg-water-600 hover:bg-water-500 text-white font-bold py-2 rounded">Criar</button>
+                            </div>
+                        </div>`);
+                    setTimeout(() => document.getElementById('newTankName')?.focus(), 50);
+                },
+                createFromModal() {
+                    const name = document.getElementById('newTankName').value.trim();
+                    if (!name) return UI.showToast('Digite um nome para o aquário.', 'error');
+                    Store.createTank(name);
+                    UI.closeModal();
+                    App.updateHeader();
+                    App.applyTheme();
+                    App.renderChecklist();
+                    App.renderTable();
+                    App.checkAlerts();
+                    App.populateTankSwitcher();
+                    App.switchView('dashboard');
+                    UI.showToast(`Aquário "${name}" criado!`, 'success');
+                },
+                open() {
+                    const rows = Store.tanks.map(id => {
+                        const name = Store.getTankName(id);
+                        const isActive = id === Store.activeTankId;
+                        const canDelete = Store.tanks.length > 1;
+                        return `
+                            <div class="flex items-center justify-between bg-gray-900 p-3 rounded border ${isActive ? 'border-water-500' : 'border-gray-700'} gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid ${isActive ? 'fa-check text-water-400' : 'fa-water text-gray-600'}"></i>
+                                    <span class="text-sm text-white truncate">${Utils.escapeHtml(name)}</span>
+                                    ${isActive ? '<span class="text-[9px] uppercase text-water-400 border border-water-900 rounded px-1 shrink-0">Ativo</span>' : ''}
+                                </div>
+                                <div class="flex gap-3 shrink-0">
+                                    ${!isActive ? `<button onclick="Modules.Tanks.switchAndClose('${id}')" title="Selecionar" class="text-water-400 hover:text-water-300"><i class="fa-solid fa-right-to-bracket"></i></button>` : ''}
+                                    <button onclick="Modules.Tanks.rename('${id}')" title="Renomear" class="text-blue-400 hover:text-blue-300"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="Modules.Tanks.remove('${id}')" title="${canDelete ? 'Excluir' : 'Não é possível excluir o único aquário'}" class="${canDelete ? 'text-red-500 hover:text-red-400' : 'text-gray-700 cursor-not-allowed'}" ${canDelete ? '' : 'disabled'}><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>`;
+                    }).join('');
+
+                    UI.openModal(`
+                        <div class="bg-gray-900 w-full max-w-lg rounded-lg shadow-2xl border border-gray-700 fade-in flex flex-col max-h-[85vh]">
+                            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850 rounded-t-lg">
+                                <h3 class="font-bold text-white"><i class="fa-solid fa-water text-water-400 mr-2"></i> Meus Aquários</h3>
+                                <button onclick="UI.closeModal()"><i class="fa-solid fa-times text-gray-400"></i></button>
+                            </div>
+                            <div class="flex-1 overflow-y-auto p-4 space-y-2">${rows}</div>
+                            <div class="p-4 border-t border-gray-700 bg-gray-850">
+                                <button onclick="UI.closeModal(); Modules.Tanks.openNew();" class="w-full bg-water-600 hover:bg-water-500 text-white font-bold py-2 rounded"><i class="fa-solid fa-plus mr-1"></i> Novo Aquário</button>
+                            </div>
+                        </div>`);
+                },
+                switchAndClose(id) {
+                    UI.closeModal();
+                    App.switchTank(id);
+                },
+                rename(id) {
+                    const current = Store.getTankName(id);
+                    UI.openModal(`
+                        <div class="bg-gray-800 p-6 rounded border border-gray-600 w-full max-w-sm">
+                            <h3 class="text-white font-bold mb-4"><i class="fa-solid fa-pen text-blue-400 mr-2"></i> Renomear Aquário</h3>
+                            <input id="renameTankInput" value="${Utils.escapeHtml(current)}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white mb-4">
+                            <div class="flex gap-2">
+                                <button onclick="Modules.Tanks.open()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded">Cancelar</button>
+                                <button onclick="Modules.Tanks.saveRename('${id}')" class="flex-1 bg-water-600 hover:bg-water-500 text-white font-bold py-2 rounded">Salvar</button>
+                            </div>
+                        </div>`);
+                    setTimeout(() => document.getElementById('renameTankInput')?.focus(), 50);
+                },
+                saveRename(id) {
+                    const name = document.getElementById('renameTankInput').value.trim();
+                    if (!name) return UI.showToast('Nome não pode ser vazio.', 'error');
+                    Store.renameTank(id, name);
+                    if (id === Store.activeTankId) App.updateHeader();
+                    App.populateTankSwitcher();
+                    this.open();
+                    UI.showToast('Aquário renomeado!', 'success');
+                },
+                async remove(id) {
+                    if (Store.tanks.length <= 1) return UI.showToast('Você precisa manter pelo menos um aquário.', 'error');
+                    const name = Store.getTankName(id);
+                    const confirmed = await UI.showConfirm(`Excluir "${Utils.escapeHtml(name)}"? Todos os registros e o inventário desse aquário serão perdidos permanentemente.`);
+                    if (!confirmed) return;
+                    Store.deleteTank(id);
+                    App.updateHeader();
+                    App.applyTheme();
+                    App.renderChecklist();
+                    App.renderTable();
+                    App.checkAlerts();
+                    App.populateTankSwitcher();
+                    App.switchView('dashboard');
+                    this.open();
+                    UI.showToast('Aquário excluído.', 'success');
                 }
             }
         };

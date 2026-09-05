@@ -2340,9 +2340,18 @@
         // Lê a config do app principal direto do localStorage (mesma origem).
         // Usado para herdar o tema já escolhido lá e pré-preencher o volume do
         // tanque nas calculadoras de dosagem, evitando digitar tudo de novo.
+        // O Aquazen suporta múltiplos aquários: os dados de cada um ficam em
+        // "aqua_config_<id>", com "aqua_active_tank" apontando o aquário atual.
+        // A chave "aqua_config" (sem sufixo) só existe em navegadores que ainda
+        // não abriram o Aquazen depois do suporte a múltiplos aquários.
+        App.getAquazenConfigKey = function() {
+            const activeId = localStorage.getItem('aqua_active_tank');
+            return activeId ? `aqua_config_${activeId}` : 'aqua_config';
+        };
+
         App.getAquazenConfig = function() {
             try {
-                const raw = localStorage.getItem('aqua_config');
+                const raw = localStorage.getItem(App.getAquazenConfigKey());
                 return raw ? JSON.parse(raw) : null;
             } catch (e) {
                 return null;
@@ -2354,13 +2363,14 @@
             document.body.className = theme === 'dark' ? '' : `theme-${theme}`;
             App.Store.set('theme', theme);
 
-            // Propaga a troca de tema de volta para o Aquazen (aqua_config), se existir,
-            // para as duas páginas ficarem sincronizadas independente de onde o usuário mexeu.
+            // Propaga a troca de tema de volta para o aquário ativo do Aquazen, se
+            // existir, para as duas páginas ficarem sincronizadas independente de
+            // onde o usuário mexeu.
             if (!opts || !opts.skipSync) {
                 const aquaConfig = App.getAquazenConfig();
                 if (aquaConfig) {
                     aquaConfig.theme = theme === 'dark' ? 'default' : theme;
-                    try { localStorage.setItem('aqua_config', JSON.stringify(aquaConfig)); } catch (e) {}
+                    try { localStorage.setItem(App.getAquazenConfigKey(), JSON.stringify(aquaConfig)); } catch (e) {}
                 }
             }
 

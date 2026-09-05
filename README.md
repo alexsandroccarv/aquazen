@@ -28,6 +28,8 @@ O objetivo do Aquazen é fornecer uma ferramenta acessível, sem necessidade de 
 
 * **Identidade do Tanque:** Suporte a água doce, salgada e salobra, estilo de montagem (comunitário, plantado, biótopo, etc.) e ID do tanque para organizar backups de múltiplos aquários.
 
+* **Múltiplos Aquários:** Cadastre quantos aquários quiser, cada um com seus próprios registros, inventário e configurações, completamente isolados entre si. Troque entre eles pelo seletor no cabeçalho, sem precisar de múltiplas instalações ou abas separadas. Quem já usava o Aquazen antes desse recurso não perde nada — os dados existentes viram automaticamente o primeiro aquário.
+
 * **Backup & Restore:** Sistema completo de exportação e importação de dados em formato JSON, garantindo a portabilidade entre navegadores e dispositivos.
 
 ## Tecnologias Utilizadas
@@ -83,7 +85,7 @@ Para acessar seus dados de qualquer lugar (via celular ou outros computadores), 
 
 3. Acesse a URL gerada pelo provedor.
 
-> **Nota Importante:** O sistema utiliza o `localStorage` do navegador. Se você acessar por dispositivos diferentes (ex: PC e Celular), os dados **não** estarão sincronizados automaticamente, a menos que você utilize a função de **Backup (Exportar JSON)** em um dispositivo e **Restore (Importar JSON)** no outro.
+> **Nota Importante:** O sistema utiliza o `localStorage` do navegador. Se você acessar por dispositivos diferentes (ex: PC e Celular), os dados **não** estarão sincronizados automaticamente, a menos que você utilize a função de **Backup (Exportar JSON)** em um dispositivo e **Restore (Importar JSON)** no outro. Com múltiplos aquários, o backup/restore sempre atua sobre o aquário selecionado no momento — para levar mais de um aquário para outro dispositivo, repita o processo em cada um.
 
 ## Autoria
 

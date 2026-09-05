@@ -315,8 +315,11 @@
             defaultConfig: {
                 tankName: 'Tanque Principal',
                 tankOwner: '',
+                tankId: '',
                 tankVolume: 200,
                 tankNotes: '',
+                waterType: 'doce', // doce, salgada, salobra
+                tankStyle: 'comunitario',
                 theme: 'default',
                 enableAlerts: true,
                 enableEmergencyAlerts: true,
@@ -384,6 +387,9 @@
                 if(this.config.enablePhotoperiod === undefined) this.config.enablePhotoperiod = true;
                 if(this.config.autoBackupInterval === undefined) this.config.autoBackupInterval = 7;
                 if(this.config.tankOwner === undefined) this.config.tankOwner = '';
+                if(this.config.tankId === undefined) this.config.tankId = '';
+                if(this.config.waterType === undefined) this.config.waterType = 'doce';
+                if(this.config.tankStyle === undefined) this.config.tankStyle = 'comunitario';
             },
             deepMerge(target, source) {
                 for (const key in source) {
@@ -441,7 +447,8 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `aqualog_backup_${new Date().toISOString().slice(0,10)}.json`;
+                const idPart = this.config.tankId ? `${this.config.tankId}-` : '';
+                a.download = `aqualog_${idPart}backup_${new Date().toISOString().slice(0,10)}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -598,7 +605,9 @@
             updateHeader() {
                 const tankName = Utils.escapeHtml(Store.config.tankName);
                 const owner = Utils.escapeHtml(Store.config.tankOwner);
-                const display = owner ? `${tankName} <span class="text-gray-600 mx-1">-</span> ${owner}` : tankName;
+                const waterLabels = { doce: 'Água Doce', salgada: 'Água Salgada', salobra: 'Água Salobra' };
+                const water = Store.config.waterType ? ` <span class="text-gray-500 text-sm font-normal">(${waterLabels[Store.config.waterType] || Utils.escapeHtml(Store.config.waterType)})</span>` : '';
+                const display = owner ? `${tankName}${water} <span class="text-gray-600 mx-1">-</span> ${owner}` : `${tankName}${water}`;
                 document.getElementById('headerTankName').innerHTML = display;
             },
             applyTheme() {
@@ -1385,7 +1394,7 @@
                                         </div>
                                     </div>
                                 </section>
-                                <section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-3">Gerais</h4><div class="grid grid-cols-2 gap-4"><div class="col-span-2"><label class="text-xs text-gray-400">Nome do Tanque</label><input id="cName" value="${Utils.escapeHtml(c.tankName)}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div class="col-span-2"><label class="text-xs text-gray-400">Proprietário</label><input id="cOwner" value="${Utils.escapeHtml(c.tankOwner || '')}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Volume (L)</label><input id="cVol" type="number" value="${c.tankVolume}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Tema</label><select id="cTheme" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"><option value="default">Dark</option><option value="cyan">Ciano</option><option value="green">Verde</option><option value="light">Light</option></select></div><div class="col-span-2"><label class="text-xs text-gray-400">Notas</label><textarea id="cNotes" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white text-xs">${Utils.escapeHtml(c.tankNotes||'')}</textarea></div></div></section>
+                                <section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-3">Gerais</h4><div class="flex gap-4 mb-4"><div class="w-24"><label class="text-xs text-gray-400">ID</label><input id="cId" type="number" value="${Utils.escapeHtml(c.tankId || '')}" min="0" max="999" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3)" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white text-center font-mono"></div><div class="flex-1"><label class="text-xs text-gray-400">Nome do Tanque</label><input id="cName" value="${Utils.escapeHtml(c.tankName)}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div></div><div class="grid grid-cols-2 gap-4"><div class="col-span-2"><label class="text-xs text-gray-400">Proprietário</label><input id="cOwner" value="${Utils.escapeHtml(c.tankOwner || '')}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Volume (L)</label><input id="cVol" type="number" value="${c.tankVolume}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Tema</label><select id="cTheme" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"><option value="default">Dark</option><option value="cyan">Ciano</option><option value="green">Verde</option><option value="light">Light</option></select></div><div><label class="text-xs text-gray-400">Tipo de Água</label><select id="cWater" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white text-xs"><option value="doce" ${c.waterType === 'doce' ? 'selected' : ''}>Água Doce</option><option value="salgada" ${c.waterType === 'salgada' ? 'selected' : ''}>Água Salgada (Marinho)</option><option value="salobra" ${c.waterType === 'salobra' ? 'selected' : ''}>Água Salobra</option></select></div><div><label class="text-xs text-gray-400">Estilo de Montagem</label><select id="cStyle" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white text-xs"><option value="comunitario" ${c.tankStyle === 'comunitario' ? 'selected' : ''}>Comunitário</option><option value="plantado-low" ${c.tankStyle === 'plantado-low' ? 'selected' : ''}>Plantado Low-Tech</option><option value="plantado-hi" ${c.tankStyle === 'plantado-hi' ? 'selected' : ''}>Plantado Hi-Tech</option><option value="biotopo" ${c.tankStyle === 'biotopo' ? 'selected' : ''}>Biótopo</option><option value="mono" ${c.tankStyle === 'mono' ? 'selected' : ''}>Mono-espécie</option><option value="paludario" ${c.tankStyle === 'paludario' ? 'selected' : ''}>Paludário</option></select></div><div class="col-span-2"><label class="text-xs text-gray-400">Notas</label><textarea id="cNotes" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white text-xs">${Utils.escapeHtml(c.tankNotes||'')}</textarea></div></div></section>
                                 <section id="secPhoto" class="${c.enablePhotoperiod ? '' : 'hidden'} transition-all"><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-3">Fotoperíodo</h4><div class="bg-gray-800/50 p-4 rounded border border-gray-700 flex flex-col gap-4"><div class="relative h-8 bg-gray-900 rounded-full overflow-hidden border border-gray-700"><div class="absolute inset-0 flex text-[8px] text-gray-600 justify-between px-2 items-center"><span>00:00</span><span>12:00</span><span>23:59</span></div><div id="photoBar" class="absolute top-0 bottom-0 bg-gradient-to-r from-yellow-600 to-yellow-400 opacity-80 transition-all duration-500 rounded-full"></div></div><div class="flex items-center justify-between gap-4"><div class="text-center"><label class="text-[10px] text-gray-500 uppercase block mb-1"><i class="fa-solid fa-sun text-yellow-500"></i> Ligar</label><input type="time" id="cPhotoStart" value="${c.photoperiod?.start || '08:00'}" onchange="document.getElementById('btnCalcPhoto').click()" class="bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center w-20"></div><div class="flex flex-col items-center"><span class="text-xs font-bold text-white" id="photoText">8h</span><span class="text-[9px] text-gray-500 uppercase">Duração</span></div><div class="text-center"><label class="text-[10px] text-gray-500 uppercase block mb-1"><i class="fa-solid fa-moon text-blue-400"></i> Desligar</label><input type="time" id="cPhotoEnd" value="${c.photoperiod?.end || '16:00'}" onchange="document.getElementById('btnCalcPhoto').click()" class="bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center w-20"></div></div><button id="btnCalcPhoto" class="hidden"></button></div></section>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6"><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Temperatura</h4>${rangeInp('cTemp', r.temp.min, r.temp.max)}${critInp('cTemp', r.temp.minCrit, r.temp.maxCrit)}</section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">pH</h4>${rangeInp('cPh', r.ph.min, r.ph.max)}${critInp('cPh', r.ph.minCrit, r.ph.maxCrit)}</section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Condutividade & Sólidos</h4><div class="mb-2"><span class="text-xs text-gray-400 cursor-help" title="Total de Sólidos Dissolvidos">TDS</span> ${rangeInp('cTds', r.tds.min, r.tds.max)}</div><div><span class="text-xs text-gray-400 cursor-help" title="Condutividade Elétrica">EC</span> ${rangeInp('cEc', r.ec.min, r.ec.max)}</div></section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Nitrogenados (Limites)</h4><div class="space-y-2"><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Amônia">NH3</span>${maxInp('cNh3', r.nh3.max, r.nh3.maxCrit)}</div><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Nitrito">NO2</span>${maxInp('cNo2', r.no2.max, r.no2.maxCrit)}</div><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Nitrato">NO3</span>${maxInp('cNo3', r.no3.max, r.no3.maxCrit)}</div></div></section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Dureza</h4><div class="mb-2"><span class="text-xs text-gray-400 cursor-help" title="Dureza Geral">GH</span> ${rangeInp('cGh', r.gh.min, r.gh.max)}</div><div><span class="text-xs text-gray-400 cursor-help" title="Dureza Carbonácea">KH</span> ${rangeInp('cKh', r.kh.min, r.kh.max)}</div></section></div>
 
@@ -1481,7 +1490,10 @@
                     c.enablePhotoperiod = document.getElementById('cEnablePhoto').checked;
                     c.autoBackupInterval = parseInt(document.getElementById('cAutoBackupInterval').value) || 0;
                     c.tankName = document.getElementById('cName').value;
-                    c.tankOwner = document.getElementById('cOwner').value; // Save new owner field
+                    c.tankOwner = document.getElementById('cOwner').value;
+                    c.tankId = document.getElementById('cId').value;
+                    c.waterType = document.getElementById('cWater').value;
+                    c.tankStyle = document.getElementById('cStyle').value;
                     c.tankVolume = getVal('cVol');
                     c.tankNotes = document.getElementById('cNotes').value;
                     c.theme = document.getElementById('cTheme').value;

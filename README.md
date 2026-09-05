@@ -12,7 +12,7 @@ O objetivo do Aquazen é fornecer uma ferramenta acessível, sem necessidade de 
 
 * **Dashboard:** Visão geral com KPIs (Temperatura Média, Patrimônio, Volume) e gráficos interativos (SVG nativo) de temperatura, pH e Nitrato.
 
-* **Registros Diários:** Formulário completo para inserção de parâmetros (pH, Amônia, Nitrito, etc.) e tarefas de manutenção (TPA, Fertilização), com validação de dados e feedback visual.
+* **Registros Diários:** Formulário completo para inserção de parâmetros (pH, Amônia, Nitrito, Fosfato, Ferro, Oxigênio Dissolvido, Cobre, Silicatos, etc.) e tarefas de manutenção (TPA, Fertilização), com validação de dados e feedback visual. Importação/exportação em CSV para integração com planilhas.
 
 * **Cronograma Inteligente:** Geração automática de calendário de tarefas baseada em um plano de manutenção configurável (Diário, Semanal, Quinzenal, etc.), com suporte a exportação para agenda (.ics).
 
@@ -22,7 +22,11 @@ O objetivo do Aquazen é fornecer uma ferramenta acessível, sem necessidade de 
 
 * **Calculadora Integrada (Aquazen Calc):** Página dedicada (`calculadora.html`, acessível pelo menu "Calculadora") com calculadoras e conversores para aquários de água doce, salgada e salobra — volume, substrato, CO2, dosagem e mais.
 
-* **Alertas Dinâmicos:** Notificações automáticas sobre atrasos em manutenções e níveis críticos de parâmetros químicos.
+* **Alertas Dinâmicos:** Notificações automáticas sobre atrasos em manutenções e níveis críticos de parâmetros químicos (alertas de atraso e de emergência funcionam de forma independente).
+
+* **Consultor IA:** Menu "IA" com diagnóstico assistido por Gemini para dúvidas sobre saúde de peixes, plantas e parâmetros da água (requer uma chave de API do Gemini, configurada em Configuração &gt; Sistema).
+
+* **Identidade do Tanque:** Suporte a água doce, salgada e salobra, estilo de montagem (comunitário, plantado, biótopo, etc.) e ID do tanque para organizar backups de múltiplos aquários.
 
 * **Backup & Restore:** Sistema completo de exportação e importação de dados em formato JSON, garantindo a portabilidade entre navegadores e dispositivos.
 

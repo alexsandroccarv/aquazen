@@ -1,12 +1,12 @@
-# AquaLog
+# Aquazen
 
 ### Sistema de Gerenciamento de Aquários (SPA)
 
-O **AquaLog** é uma Single Page Application (SPA) robusta e profissional, desenvolvida inteiramente em um único arquivo HTML, projetada para auxiliar aquaristas (Low Tech e High Tech) no monitoramento e gestão completa de seus ecossistemas aquáticos.
+O **Aquazen** é uma Single Page Application (SPA) robusta e profissional, desenvolvida inteiramente em um único arquivo HTML, projetada para auxiliar aquaristas (Low Tech e High Tech) no monitoramento e gestão completa de seus ecossistemas aquáticos.
 
 ## Sobre o Projeto
 
-O objetivo do AquaLog é fornecer uma ferramenta acessível, sem necessidade de instalação de servidores ou bancos de dados complexos, para registrar parâmetros da água, controlar manutenções, gerenciar inventário e visualizar a evolução do aquário através de dashboards intuitivos.
+O objetivo do Aquazen é fornecer uma ferramenta acessível, sem necessidade de instalação de servidores ou bancos de dados complexos, para registrar parâmetros da água, controlar manutenções, gerenciar inventário e visualizar a evolução do aquário através de dashboards intuitivos.
 
 ### Funcionalidades Principais
 
@@ -44,7 +44,7 @@ O projeto segue a filosofia **Single-File**, onde toda a estrutura, estilo e ló
 
 ## Padrões de Cores e Temas
 
-O AquaLog possui um motor de temas dinâmico que permite ao usuário alterar a aparência da aplicação instantaneamente. As paletas foram pensadas para o conforto visual e contexto do aquarismo.
+O Aquazen possui um motor de temas dinâmico que permite ao usuário alterar a aparência da aplicação instantaneamente. As paletas foram pensadas para o conforto visual e contexto do aquarismo.
 
 | Tema | Nome Visual | Descrição | 
  | ----- | ----- | ----- | 
@@ -57,7 +57,7 @@ O AquaLog possui um motor de temas dinâmico que permite ao usuário alterar a a
 
 ### Uso Local
 
-Para utilizar o AquaLog diretamente no seu computador, sem necessidade de internet (após o primeiro carregamento das CDNs) ou servidor:
+Para utilizar o Aquazen diretamente no seu computador, sem necessidade de internet (após o primeiro carregamento das CDNs) ou servidor:
 
 1. Baixe o arquivo `index.html`.
 

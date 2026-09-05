@@ -122,10 +122,10 @@
 
         <!-- Row 2: Categories / Navigation -->
         <nav class="flex gap-2 overflow-x-auto no-scrollbar items-center px-4 py-2 bg-gray-850/50 mask-linear-fade">
-            <button onclick="App.switchView('dashboard')" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+            <button id="navBtnDashboard" onclick="App.switchView('dashboard')" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
                 <i class="fa-solid fa-chart-line text-water-400 group-hover:text-water-300"></i> Dashboard
             </button>
-             <button onclick="App.switchView('registers')" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
+             <button id="navBtnRegisters" onclick="App.switchView('registers')" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
                 <i class="fa-solid fa-pen-to-square text-blue-400 group-hover:text-blue-300"></i> Registros
             </button>
             <button onclick="Modules.Gallery.open()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition border border-gray-700 text-gray-300 flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0">
@@ -580,6 +580,36 @@
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob); link.download = filename;
                 link.click();
+            },
+            // Parser gen\u00E9rico de CSV (delimitador ";", campos entre aspas com ""
+            // para escapar aspas internas, compat\u00EDvel com o formato de generateCSV
+            // e com edi\u00E7\u00E3o manual em planilhas). N\u00E3o assume um schema fixo de
+            // colunas: l\u00EA o cabe\u00E7alho que vier no arquivo.
+            parseCSV(text) {
+                const rows = [];
+                let row = [], field = '', inQuotes = false;
+                for (let i = 0; i < text.length; i++) {
+                    const c = text[i];
+                    if (inQuotes) {
+                        if (c === '"') {
+                            if (text[i + 1] === '"') { field += '"'; i++; }
+                            else inQuotes = false;
+                        } else field += c;
+                    } else if (c === '"') {
+                        inQuotes = true;
+                    } else if (c === ';') {
+                        row.push(field); field = '';
+                    } else if (c === '\n' || c === '\r') {
+                        if (c === '\r' && text[i + 1] === '\n') i++;
+                        row.push(field); field = '';
+                        if (row.length > 1 || row[0] !== '') rows.push(row);
+                        row = [];
+                    } else {
+                        field += c;
+                    }
+                }
+                if (field !== '' || row.length) { row.push(field); rows.push(row); }
+                return rows;
             }
         };
 
@@ -634,6 +664,17 @@
                 } else if (viewName === 'registers') {
                     registers.classList.remove('hidden');
                 }
+                this.updateNavState(viewName);
+            },
+            // Destaca no menu o botão correspondente à view atual (Dashboard/Registros).
+            updateNavState(viewName) {
+                const active = 'bg-water-600 border-water-500 text-white';
+                const inactive = 'bg-gray-800 border-gray-700 text-gray-300';
+                const btnDash = document.getElementById('navBtnDashboard');
+                const btnReg = document.getElementById('navBtnRegisters');
+                if (!btnDash || !btnReg) return;
+                btnDash.className = `px-3 py-1.5 hover:bg-gray-700 rounded-md transition border flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0 ${viewName === 'dashboard' ? active : inactive}`;
+                btnReg.className = `px-3 py-1.5 hover:bg-gray-700 rounded-md transition border flex items-center gap-2 whitespace-nowrap group text-xs font-medium shrink-0 ${viewName === 'registers' ? active : inactive}`;
             },
             validateLive(input) {
                 const val = input.value;
@@ -951,7 +992,45 @@
             },
             async deleteLog(id) { if(await UI.showConfirm('Excluir?')) { Store.logs = Store.logs.filter(l => l.id !== id); Store.saveLogs(); App.checkAlerts(); } },
             exportCSV() { Utils.generateCSV(Store.logs, 'AquaLog.csv'); },
-            importCSV(input) { UI.showToast('Importação simulada.', 'info'); input.value=''; }
+            importCSV(input) {
+                const file = input.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const text = e.target.result.replace(/^﻿/, '');
+                        const rows = Utils.parseCSV(text);
+                        if (rows.length < 2) throw new Error('Arquivo vazio ou sem linhas de dados.');
+
+                        const headers = rows[0];
+                        if (!headers.includes('date')) throw new Error('Coluna "date" não encontrada no cabeçalho.');
+
+                        const importedLogs = rows.slice(1).map(cols => {
+                            const obj = {};
+                            headers.forEach((h, i) => { obj[h] = cols[i] !== undefined ? cols[i] : ''; });
+                            obj.actions = obj.actions ? obj.actions.split(',').map(s => s.trim()).filter(Boolean) : [];
+                            if (!obj.id) obj.id = crypto.randomUUID();
+                            return obj;
+                        }).filter(log => log.date);
+
+                        if (importedLogs.length === 0) throw new Error('Nenhum registro válido encontrado (verifique a coluna "date").');
+
+                        const confirmed = await UI.showConfirm(`Importar ${importedLogs.length} registro(s) do CSV? Eles serão adicionados ao histórico atual (não substituem os já existentes).`);
+                        if (!confirmed) { input.value = ''; return; }
+
+                        Store.logs = Store.logs.concat(importedLogs).sort((a, b) => new Date(b.date) - new Date(a.date));
+                        if (Store.saveLogs()) {
+                            this.checkAlerts();
+                            UI.showToast(`${importedLogs.length} registro(s) importado(s) com sucesso!`, 'success');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        UI.showToast('Erro ao importar CSV: ' + err.message, 'error');
+                    }
+                    input.value = '';
+                };
+                reader.readAsText(file, 'utf-8');
+            }
         };
 
         const Modules = {
@@ -1307,11 +1386,11 @@
                 del(id) { Store.inventory = Store.inventory.filter(x => x.id != id); Store.saveInventory(); this.render(); }
             },
             Schedule: {
-                year: 2026,
+                year: new Date().getFullYear(),
                 view: 'list',
                 calendarDate: new Date(),
                 open() {
-                    this.year = 2026;
+                    this.year = new Date().getFullYear();
                     this.view = 'list';
                     this.calendarDate = new Date();
                     
@@ -1640,7 +1719,7 @@
                 generateICS() {
                     this.save(true); // Ensure latest config is used
                     
-                    const year = 2026; // Or current year: new Date().getFullYear(); using 2026 as per context
+                    const year = new Date().getFullYear();
                     const events = [];
                     const refDay = parseInt(Store.config.maintenanceRefDay);
                     const maint = Store.config.maintenance;

@@ -455,6 +455,18 @@
 
         const Utils = {
             formatDate(d) { if(!d) return '-'; const [y,m,day] = d.split('-'); return `${day}/${m}/${y}`; },
+            // Sanitiza texto de origem do usuário antes de injetar em innerHTML ou em atributos
+            // (ex: onclick="...('${valor}')"). Usar sempre que o valor vier de logs, inventário,
+            // configuração do tanque ou de um backup/CSV importado.
+            escapeHtml(str) {
+                if (str === null || str === undefined) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            },
             getParamColor(val, type) {
                 if (val === null || val === undefined || val === '') return 'text-gray-500';
                 const num = parseFloat(val);

@@ -1,0 +1,40 @@
+name: Publicar
+
+# Quando roda:
+#  - a cada push na branch main;
+#  - quando você clica em "Run workflow" na aba Actions (execução manual).
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+# Evita dois deploys simultâneos pisando um no outro.
+concurrency:
+  group: publicar
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Publicar no servidor
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Conferir arquivo principal
+        run: test -f index.html || { echo "ERRO: index.html ausente."; exit 1; }
+
+      # Publica no servidor via rsync sobre SSH. O script PULA automaticamente
+      # (sem falhar) se os secrets ainda não estiverem configurados — então o
+      # CI fica verde mesmo antes de você cadastrar os dados do servidor.
+      - name: Publicar no servidor (rsync/SSH)
+        run: bash .github/scripts/deploy.sh
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}

@@ -59,13 +59,13 @@ O AquaLog possui um motor de temas dinâmico que permite ao usuário alterar a a
 
 Para utilizar o AquaLog diretamente no seu computador, sem necessidade de internet (após o primeiro carregamento das CDNs) ou servidor:
 
-1. Baixe o arquivo `aqualog.html`.
+1. Baixe o arquivo `index.html`.
 
 2. Crie uma pasta dedicada para o projeto (ex: `MeusAquarios`).
 
 3. **Imagens:** Dentro desta pasta, crie um subdiretório chamado `imagens`. Embora o sistema suporte conversão para Base64, organizar suas fotos originais localmente facilita a gestão caso opte por usar URLs relativas.
 
-4. Abra o arquivo `aqualog.html` em qualquer navegador moderno (Chrome, Firefox, Edge, Safari).
+4. Abra o arquivo `index.html` em qualquer navegador moderno (Chrome, Firefox, Edge, Safari).
 
 5. Configure o nome do seu tanque e parâmetros ideais no menu **Configuração**.
 
@@ -73,7 +73,7 @@ Para utilizar o AquaLog diretamente no seu computador, sem necessidade de intern
 
 Para acessar seus dados de qualquer lugar (via celular ou outros computadores), recomenda-se hospedar o arquivo:
 
-1. Faça o upload do arquivo `aqualog.html` para serviços de hospedagem estática gratuitos como GitHub Pages, Vercel ou Netlify.
+1. Faça o upload do arquivo `index.html` para serviços de hospedagem estática gratuitos como GitHub Pages, Vercel ou Netlify.
 
 2. **Diretório de Imagens:** Se for utilizar referências de imagens por URL (ao invés do upload direto que salva no navegador), certifique-se de criar a estrutura de pastas `/imagens` no seu repositório e subir os arquivos para lá.
 

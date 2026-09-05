@@ -439,12 +439,18 @@
             importData(jsonString) {
                 try {
                     const data = JSON.parse(jsonString);
-                    if (!data.logs || !data.config) throw new Error('Formato inválido');
-                    
+                    if (!Array.isArray(data.logs)) throw new Error('Backup inválido: "logs" ausente ou não é uma lista.');
+                    if (typeof data.config !== 'object' || data.config === null || Array.isArray(data.config)) {
+                        throw new Error('Backup inválido: "config" ausente ou mal formado.');
+                    }
+                    if (data.inventory !== undefined && !Array.isArray(data.inventory)) {
+                        throw new Error('Backup inválido: "inventory" não é uma lista.');
+                    }
+
                     localStorage.setItem(CONFIG.storageKeyLogs, JSON.stringify(data.logs));
                     localStorage.setItem(CONFIG.storageKeyInventory, JSON.stringify(data.inventory || []));
                     localStorage.setItem(CONFIG.storageKeyConfig, JSON.stringify(data.config));
-                    
+
                     return true;
                 } catch (e) {
                     console.error(e);
@@ -466,6 +472,19 @@
                     .replace(/>/g, '&gt;')
                     .replace(/"/g, '&quot;')
                     .replace(/'/g, '&#39;');
+            },
+            // Para valores inseridos dentro de uma string JS de aspas simples que, por sua
+            // vez, está dentro de um atributo HTML (ex: onclick="fn('${valor}')"). O navegador
+            // desfaz o HTML-escape ANTES de interpretar o JS do atributo, então escapar só com
+            // escapeHtml não impede o valor de "fechar" a string JS — é preciso escapar para o
+            // contexto JS primeiro e envolver o resultado em escapeHtml por cima.
+            escapeJsString(str) {
+                const jsEscaped = String(str ?? '')
+                    .replace(/\\/g, '\\\\')
+                    .replace(/'/g, "\\'")
+                    .replace(/\n/g, '\\n')
+                    .replace(/\r/g, '');
+                return this.escapeHtml(jsEscaped);
             },
             getParamColor(val, type) {
                 if (val === null || val === undefined || val === '') return 'text-gray-500';
@@ -543,11 +562,11 @@
                 this.switchView('dashboard'); // Start on Dashboard
                 document.getElementById('lastModDate').innerText = new Date().toLocaleDateString();
             },
-            updateHeader() { 
-                const tankName = Store.config.tankName;
-                const owner = Store.config.tankOwner;
+            updateHeader() {
+                const tankName = Utils.escapeHtml(Store.config.tankName);
+                const owner = Utils.escapeHtml(Store.config.tankOwner);
                 const display = owner ? `${tankName} <span class="text-gray-600 mx-1">-</span> ${owner}` : tankName;
-                document.getElementById('headerTankName').innerHTML = display; 
+                document.getElementById('headerTankName').innerHTML = display;
             },
             applyTheme() {
                 document.body.className = "flex flex-col h-screen overflow-hidden text-sm selection:bg-water-500 selection:text-white " + 
@@ -689,7 +708,7 @@
                 delete data.photoUrl;
 
                 data.actions = actions;
-                data.id = Date.now().toString();
+                data.id = crypto.randomUUID();
                 
                 // Optimistic UI Update attempt
                 Store.logs.unshift(data); 
@@ -792,9 +811,9 @@
                                 div.innerHTML = `
                                     <div class="flex items-center gap-2">
                                         <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
-                                        <span><span class="font-bold">${task.name}</span> atrasada (${diffDays} dias)</span>
+                                        <span><span class="font-bold">${Utils.escapeHtml(task.name)}</span> atrasada (${diffDays} dias)</span>
                                     </div>
-                                    <span class="text-[10px] uppercase bg-yellow-900/60 px-2 py-0.5 rounded border border-yellow-800">Era para ser ${task.freq}</span>
+                                    <span class="text-[10px] uppercase bg-yellow-900/60 px-2 py-0.5 rounded border border-yellow-800">Era para ser ${Utils.escapeHtml(task.freq)}</span>
                                 `;
                                 container.appendChild(div);
                             }
@@ -857,9 +876,9 @@
                         if(log.chk_poda) badgesHtml += `<span class="px-1 py-0.5 rounded bg-green-900 text-green-200 text-[10px] mr-1">Poda</span>`;
                     }
                     
-                    let obsContent = log.notes || '-';
+                    let obsContent = Utils.escapeHtml(log.notes || '-');
                     if (log.photo) {
-                         obsContent = `<div class="flex items-center justify-between"><span class="truncate max-w-[80px]">${obsContent}</span><button onclick="UI.openImageModal('${log.photo}')" class="text-pink-400 hover:text-pink-300"><i class="fa-solid fa-camera"></i></button></div>`;
+                         obsContent = `<div class="flex items-center justify-between"><span class="truncate max-w-[80px]">${obsContent}</span><button onclick="UI.openImageModal('${Utils.escapeJsString(log.photo)}')" class="text-pink-400 hover:text-pink-300"><i class="fa-solid fa-camera"></i></button></div>`;
                     }
 
                     tr.innerHTML = `
@@ -1020,14 +1039,14 @@
                         content = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                             ${logsWithPhotos.map(l => `
                                 <div class="bg-gray-800 rounded border border-gray-700 overflow-hidden shadow-lg group">
-                                    <div class="h-48 overflow-hidden relative cursor-pointer" onclick="UI.openImageModal('${l.photo}')">
-                                        <img src="${l.photo}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                                    <div class="h-48 overflow-hidden relative cursor-pointer" onclick="UI.openImageModal('${Utils.escapeJsString(l.photo)}')">
+                                        <img src="${Utils.escapeHtml(l.photo)}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
                                         <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
                                             <span class="text-white font-bold text-sm">${Utils.formatDate(l.date)}</span>
                                         </div>
                                     </div>
                                     <div class="p-3">
-                                        <p class="text-xs text-gray-400 truncate">${l.notes || 'Sem observações'}</p>
+                                        <p class="text-xs text-gray-400 truncate">${Utils.escapeHtml(l.notes || 'Sem observações')}</p>
                                         <div class="flex gap-2 mt-2 text-[10px] text-gray-500">
                                             ${l.ph ? `<span>pH: ${l.ph}</span>` : ''}
                                             ${l.temp ? `<span>${l.temp}°C</span>` : ''}
@@ -1100,7 +1119,7 @@
                         const idx = Store.inventory.findIndex(i => i.id == id);
                         if(idx > -1) Store.inventory[idx] = { ...Store.inventory[idx], ...item };
                     } else {
-                        item.id = Date.now();
+                        item.id = crypto.randomUUID();
                         Store.inventory.push(item);
                     }
                     Store.saveInventory(); this.render(); document.getElementById('invForm').reset();
@@ -1120,13 +1139,13 @@
                         tbody.innerHTML += `
                             <tr class="border-b border-gray-800 hover:bg-gray-800">
                                 <td class="p-2">${i.active ? '<i class="fa-solid fa-check text-green-500"></i>' : '<i class="fa-solid fa-xmark text-red-500"></i>'}</td>
-                                <td class="p-2 font-bold">${i.name}<div class="text-[10px] text-gray-500">${i.details}</div></td>
+                                <td class="p-2 font-bold">${Utils.escapeHtml(i.name)}<div class="text-[10px] text-gray-500">${Utils.escapeHtml(i.details)}</div></td>
                                 <td class="p-2">${i.type}</td>
                                 <td class="p-2">${i.qty}</td>
                                 <td class="p-2">R$ ${val.toFixed(2)}</td>
                                 <td class="p-2">
-                                    <button onclick="Modules.Inventory.toggle(${i.id})"><i class="fa-solid fa-power-off text-gray-500 hover:text-white"></i></button>
-                                    <button onclick="Modules.Inventory.del(${i.id})"><i class="fa-solid fa-trash text-gray-500 hover:text-red-500 ml-2"></i></button>
+                                    <button onclick="Modules.Inventory.toggle('${i.id}')"><i class="fa-solid fa-power-off text-gray-500 hover:text-white"></i></button>
+                                    <button onclick="Modules.Inventory.del('${i.id}')"><i class="fa-solid fa-trash text-gray-500 hover:text-red-500 ml-2"></i></button>
                                 </td>
                             </tr>`;
                     });
@@ -1180,7 +1199,7 @@
                 getTasksForDate(d, startDateObj, refDay, maintenance) {
                     const tasks = [];
                     maintenance.forEach(m => {
-                        if(m.freq === 'diario') tasks.push({name: m.name, icon: Utils.getTaskIcon(m.name), color: 'text-gray-400'});
+                        if(m.freq === 'diario') tasks.push({name: Utils.escapeHtml(m.name), icon: Utils.getTaskIcon(m.name), color: 'text-gray-400'});
                     });
                     if (d.getDay() === refDay) {
                         const msPerWeek = 1000 * 60 * 60 * 24 * 7;
@@ -1195,7 +1214,7 @@
                                 if(m.freq === 'mensal' && cycleIndex % 4 === 0) add = true;
                                 if(m.freq === 'trimestral' && cycleIndex % 13 === 0) add = true;
                                 if(m.freq === 'semestral' && cycleIndex % 26 === 0) add = true;
-                                if(add) tasks.push({name: m.name, icon: Utils.getTaskIcon(m.name), color: 'text-water-400'});
+                                if(add) tasks.push({name: Utils.escapeHtml(m.name), icon: Utils.getTaskIcon(m.name), color: 'text-water-400'});
                             });
                         }
                     }
@@ -1319,7 +1338,7 @@
                                         </div>
                                     </div>
                                 </section>
-                                <section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-3">Gerais</h4><div class="grid grid-cols-2 gap-4"><div class="col-span-2"><label class="text-xs text-gray-400">Nome do Tanque</label><input id="cName" value="${c.tankName}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div class="col-span-2"><label class="text-xs text-gray-400">Proprietário</label><input id="cOwner" value="${c.tankOwner || ''}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Volume (L)</label><input id="cVol" type="number" value="${c.tankVolume}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Tema</label><select id="cTheme" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"><option value="default">Dark</option><option value="cyan">Ciano</option><option value="green">Verde</option><option value="light">Light</option></select></div><div class="col-span-2"><label class="text-xs text-gray-400">Notas</label><textarea id="cNotes" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white text-xs">${c.tankNotes||''}</textarea></div></div></section>
+                                <section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-3">Gerais</h4><div class="grid grid-cols-2 gap-4"><div class="col-span-2"><label class="text-xs text-gray-400">Nome do Tanque</label><input id="cName" value="${Utils.escapeHtml(c.tankName)}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div class="col-span-2"><label class="text-xs text-gray-400">Proprietário</label><input id="cOwner" value="${Utils.escapeHtml(c.tankOwner || '')}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Volume (L)</label><input id="cVol" type="number" value="${c.tankVolume}" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"></div><div><label class="text-xs text-gray-400">Tema</label><select id="cTheme" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"><option value="default">Dark</option><option value="cyan">Ciano</option><option value="green">Verde</option><option value="light">Light</option></select></div><div class="col-span-2"><label class="text-xs text-gray-400">Notas</label><textarea id="cNotes" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white text-xs">${Utils.escapeHtml(c.tankNotes||'')}</textarea></div></div></section>
                                 <section id="secPhoto" class="${c.enablePhotoperiod ? '' : 'hidden'} transition-all"><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-3">Fotoperíodo</h4><div class="bg-gray-800/50 p-4 rounded border border-gray-700 flex flex-col gap-4"><div class="relative h-8 bg-gray-900 rounded-full overflow-hidden border border-gray-700"><div class="absolute inset-0 flex text-[8px] text-gray-600 justify-between px-2 items-center"><span>00:00</span><span>12:00</span><span>23:59</span></div><div id="photoBar" class="absolute top-0 bottom-0 bg-gradient-to-r from-yellow-600 to-yellow-400 opacity-80 transition-all duration-500 rounded-full"></div></div><div class="flex items-center justify-between gap-4"><div class="text-center"><label class="text-[10px] text-gray-500 uppercase block mb-1"><i class="fa-solid fa-sun text-yellow-500"></i> Ligar</label><input type="time" id="cPhotoStart" value="${c.photoperiod?.start || '08:00'}" onchange="document.getElementById('btnCalcPhoto').click()" class="bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center w-20"></div><div class="flex flex-col items-center"><span class="text-xs font-bold text-white" id="photoText">8h</span><span class="text-[9px] text-gray-500 uppercase">Duração</span></div><div class="text-center"><label class="text-[10px] text-gray-500 uppercase block mb-1"><i class="fa-solid fa-moon text-blue-400"></i> Desligar</label><input type="time" id="cPhotoEnd" value="${c.photoperiod?.end || '16:00'}" onchange="document.getElementById('btnCalcPhoto').click()" class="bg-gray-900 border border-gray-600 rounded p-1 text-white text-xs text-center w-20"></div></div><button id="btnCalcPhoto" class="hidden"></button></div></section>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6"><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Temperatura</h4>${rangeInp('cTemp', r.temp.min, r.temp.max)}${critInp('cTemp', r.temp.minCrit, r.temp.maxCrit)}</section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">pH</h4>${rangeInp('cPh', r.ph.min, r.ph.max)}${critInp('cPh', r.ph.minCrit, r.ph.maxCrit)}</section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Condutividade & Sólidos</h4><div class="mb-2"><span class="text-xs text-gray-400 cursor-help" title="Total de Sólidos Dissolvidos">TDS</span> ${rangeInp('cTds', r.tds.min, r.tds.max)}</div><div><span class="text-xs text-gray-400 cursor-help" title="Condutividade Elétrica">EC</span> ${rangeInp('cEc', r.ec.min, r.ec.max)}</div></section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Nitrogenados (Limites)</h4><div class="space-y-2"><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Amônia">NH3</span>${maxInp('cNh3', r.nh3.max, r.nh3.maxCrit)}</div><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Nitrito">NO2</span>${maxInp('cNo2', r.no2.max, r.no2.maxCrit)}</div><div><span class="text-xs text-gray-400 font-bold cursor-help" title="Nitrato">NO3</span>${maxInp('cNo3', r.no3.max, r.no3.maxCrit)}</div></div></section><section><h4 class="text-xs font-bold text-gray-500 uppercase border-b border-gray-700 pb-1 mb-2">Dureza</h4><div class="mb-2"><span class="text-xs text-gray-400 cursor-help" title="Dureza Geral">GH</span> ${rangeInp('cGh', r.gh.min, r.gh.max)}</div><div><span class="text-xs text-gray-400 cursor-help" title="Dureza Carbonácea">KH</span> ${rangeInp('cKh', r.kh.min, r.kh.max)}</div></section></div>
                                 <section class="bg-gray-800/50 p-4 rounded border border-gray-700"><h4 class="text-xs font-bold text-water-400 uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Plano de Manutenção</h4><div class="flex gap-2 mb-4 items-end"><div class="flex-1"><label class="text-[10px] text-gray-500 uppercase">Item</label><select id="newMaintName" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs">${CONFIG.maintenanceItemsList.map(i => `<option>${i}</option>`).join('')}</select></div><div class="w-32"><label class="text-[10px] text-gray-500 uppercase">Frequência</label><select id="newMaintFreq" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"><option value="diario">Diário</option><option value="semanal">Semanal</option><option value="quinzenal">Quinzenal</option><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option><option value="semestral">Semestral</option></select></div><button onclick="Modules.References.addMaint()" class="bg-green-600 hover:bg-green-500 px-4 py-1.5 rounded text-white font-bold transition"><i class="fa-solid fa-plus"></i></button></div><div class="space-y-1 mb-4" id="maintList"></div><div class="border-t border-gray-700 pt-3 mb-4"><h5 class="text-xs font-bold text-gray-400 mb-2">Manutenção Periódica</h5><div class="grid grid-cols-3 gap-2"><div><label class="text-[10px] text-gray-500 uppercase">Dia da Semana</label><select id="cRefDay" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"><option value="0">Domingo</option><option value="1">Segunda</option><option value="2">Terça</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option><option value="6">Sábado</option></select></div><div><label class="text-[10px] text-gray-500 uppercase">Horário</label><input type="time" id="cRefTime" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"></div><div><label class="text-[10px] text-gray-500 uppercase">Início do Ciclo</label><input type="date" id="cRefStart" class="w-full bg-gray-900 border border-gray-600 rounded p-1.5 text-white text-xs"></div></div></div><div class="flex gap-2"><button onclick="Modules.References.updateSchedule()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-xs"><i class="fa-solid fa-sync mr-1"></i> Atualizar Cronograma</button><button onclick="Modules.References.generateICS()" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded text-xs"><i class="fa-solid fa-calendar-alt mr-1"></i> Gerar Agenda (.ics)</button></div></section>
@@ -1378,8 +1397,8 @@
                         <div class="flex justify-between items-center bg-gray-900 p-2 rounded border border-gray-700">
                             <span class="text-xs text-white font-medium flex items-center gap-2">
                                 <i class="fa-solid ${Utils.getTaskIcon(m.name)} text-gray-400"></i>
-                                ${m.name} 
-                                <span class="text-water-400 ml-1 text-[10px] uppercase border border-water-900 px-1 rounded">${m.freq}</span>
+                                ${Utils.escapeHtml(m.name)}
+                                <span class="text-water-400 ml-1 text-[10px] uppercase border border-water-900 px-1 rounded">${Utils.escapeHtml(m.freq)}</span>
                             </span>
                             <button onclick="Modules.References.delMaint(${i})" class="text-red-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
                         </div>`).join('');

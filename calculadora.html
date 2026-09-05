@@ -1938,13 +1938,14 @@
 
                         <div id="info-labcom" class="info-box">
                             <p><strong>Referência:</strong> Labcon/Alcon</p>
-                            <p>Medicamentos, algicidas e fertilizantes devem ser calculados sobre o volume total do aquário.</p>
+                            <p>Medicamentos, algicidas e fertilizantes calculados sobre o volume total. <strong>Remova o carvão ativado.</strong></p>
                             <hr style="border-color: var(--border-color); margin: 0.5rem 0;">
-                            <p><strong>Ciclos de Tratamento:</strong></p>
-                            <ul style="list-style-type: disc; margin-left: 1.2rem; margin-bottom: 0.5rem;">
-                                <li><strong>Ictio/Fungos:</strong> Geralmente requerem aplicações a cada 48 horas. Aumente a temperatura para 28-30°C.</li>
-                                <li><strong>Duração:</strong> Mantenha o tratamento até o desaparecimento dos sintomas + 2 dias de segurança.</li>
-                                <li><strong>Carvão Ativado:</strong> Deve ser removido do filtro durante qualquer tratamento medicamentoso.</li>
+                            <p><strong>Protocolos de Tratamento:</strong></p>
+                            <ul style="list-style-type: disc; margin-left: 1.2rem; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                                <li class="mb-1"><strong>Ictio:</strong> Aplicar a cada 48h. Subir temperatura para 28-30°C. Manter até sumirem os sintomas + 2 dias.</li>
+                                <li class="mb-1"><strong>Aquavida:</strong> Aplicar a cada 48h. Recomendada TPA parcial antes de novas doses.</li>
+                                <li class="mb-1"><strong>Clean:</strong> Dose única. Repetir após 72h se necessário. Aumente a aeração.</li>
+                                <li class="mb-1"><strong>Bacter:</strong> Aplicar a cada 24h, geralmente por 5 dias.</li>
                             </ul>
                         </div>
 
@@ -2886,9 +2887,13 @@
 
         // Nova Função Auxiliar para renderizar CARD de Produto
         App.Modules.renderProductCard = function(prod, volume) {
-            const gotas = Math.ceil(volume * prod.dosage);
-            const ml = (volume * prod.dosage) / 20;
-            let mlDisplay = ml < 0.1 ? "< 0.1" : ml.toFixed(1);
+            // Protege contra volume inválido/negativo (ex: campo limpo durante digitação)
+            const safeVolume = (isNaN(volume) || volume < 0) ? 0 : volume;
+
+            const gotas = Math.ceil(safeVolume * prod.dosage);
+            const ml = (safeVolume * prod.dosage) / 20;
+            let mlDisplay = ml < 0.1 && ml > 0 ? "< 0.1" : ml.toFixed(1);
+            if (safeVolume === 0) mlDisplay = "0.0";
 
             return `
                 <div class="bg-gray-800 rounded-lg p-3 border border-gray-700 hover:border-gray-600 transition-colors">

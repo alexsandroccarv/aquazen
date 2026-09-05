@@ -490,20 +490,25 @@
                 if (val === null || val === undefined || val === '') return 'text-gray-500';
                 const num = parseFloat(val);
                 const r = Store.config.ranges;
-                if (['temp', 'ph'].includes(type)) {
-                    if (num >= r[type].min && num <= r[type].max) return 'text-green-400 font-bold';
-                    if (num >= r[type].minCrit && num <= r[type].maxCrit) return 'text-yellow-400';
-                    return 'text-red-500 font-bold';
-                }
-                if (['nh3', 'no2', 'no3'].includes(type)) {
-                    if (num <= r[type].max) return 'text-green-400';
-                    if (num <= r[type].maxCrit) return 'text-yellow-400';
-                    return 'text-red-500 font-bold';
-                }
-                if (['tds', 'ec', 'gh', 'kh'].includes(type) && r[type]) {
-                    if (num >= r[type].min && num <= r[type].max) return 'text-green-400';
-                    return 'text-yellow-400';
-                }
+
+                // Faixa com mínimo e máximo ideais/críticos (temp, pH, dureza, etc.)
+                const checkRange = (range) => {
+                    if (!range) return 'text-gray-300';
+                    if (num < range.minCrit || num > range.maxCrit) return 'text-red-500 font-bold';
+                    if (num < range.min || num > range.max) return 'text-yellow-400';
+                    return 'text-green-400 font-bold';
+                };
+
+                // Só teto (substâncias tóxicas como amônia/nitrito/nitrato)
+                const checkMax = (range) => {
+                    if (!range) return 'text-gray-300';
+                    if (num > range.maxCrit) return 'text-red-500 font-bold';
+                    if (num > range.max) return 'text-yellow-400';
+                    return 'text-green-400';
+                };
+
+                if (['temp', 'ph', 'tds', 'ec', 'gh', 'kh'].includes(type)) return checkRange(r[type]);
+                if (['nh3', 'no2', 'no3'].includes(type)) return checkMax(r[type]);
                 return 'text-gray-300';
             },
             getTaskIcon(name) {
@@ -523,6 +528,19 @@
                     'Troca do Perlon': 'fa-filter'
                 };
                 return map[name] || 'fa-check-circle';
+            },
+            getCategoryIcon(name) {
+                const map = {
+                    'Fauna': 'fa-fish',
+                    'Flora': 'fa-leaf',
+                    'Equipamentos': 'fa-plug',
+                    'Decoração': 'fa-dungeon',
+                    'Alimentação Especial': 'fa-utensils',
+                    'Manutenção': 'fa-tools',
+                    'Testes': 'fa-vial',
+                    'Outros': 'fa-box-open'
+                };
+                return map[name] || 'fa-cube';
             },
             generateCSV(data, filename) {
                 if(!data.length) return;
@@ -741,8 +759,6 @@
                 const container = document.getElementById('globalAlerts');
                 if(!container) return;
                 container.innerHTML = '';
-                
-                if (!Store.config.enableAlerts) return; 
 
                 const plan = Store.config.maintenance || [];
                 const logs = Store.logs;
@@ -1140,7 +1156,7 @@
                             <tr class="border-b border-gray-800 hover:bg-gray-800">
                                 <td class="p-2">${i.active ? '<i class="fa-solid fa-check text-green-500"></i>' : '<i class="fa-solid fa-xmark text-red-500"></i>'}</td>
                                 <td class="p-2 font-bold">${Utils.escapeHtml(i.name)}<div class="text-[10px] text-gray-500">${Utils.escapeHtml(i.details)}</div></td>
-                                <td class="p-2">${i.type}</td>
+                                <td class="p-2"><i class="fa-solid ${Utils.getCategoryIcon(i.type)} mr-1"></i> ${i.type}</td>
                                 <td class="p-2">${i.qty}</td>
                                 <td class="p-2">R$ ${val.toFixed(2)}</td>
                                 <td class="p-2">

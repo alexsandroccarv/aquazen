@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AquaLog - Gerenciamento de Aquário Low Tech</title>
+    <title>Aquazen - Gerenciamento de Aquário Low Tech</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -110,7 +110,7 @@
                     <i class="fa-solid fa-water"></i>
                 </div>
                 <div class="flex items-center gap-2 overflow-hidden">
-                    <h1 class="text-xl font-bold tracking-tight text-white leading-none whitespace-nowrap">AquaLog</h1>
+                    <h1 class="text-xl font-bold tracking-tight text-white leading-none whitespace-nowrap">Aquazen</h1>
                     <span class="text-xl text-gray-700 font-light">|</span>
                     <span id="headerTankName" class="text-xl font-bold tracking-tight text-water-400 leading-none truncate">Carregando...</span>
                 </div>
@@ -453,7 +453,7 @@
                 const a = document.createElement('a');
                 a.href = url;
                 const idPart = this.config.tankId ? `${this.config.tankId}-` : '';
-                a.download = `aqualog_${idPart}backup_${new Date().toISOString().slice(0,10)}.json`;
+                a.download = `aquazen_${idPart}backup_${new Date().toISOString().slice(0,10)}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -991,7 +991,7 @@
                 });
             },
             async deleteLog(id) { if(await UI.showConfirm('Excluir?')) { Store.logs = Store.logs.filter(l => l.id !== id); Store.saveLogs(); App.checkAlerts(); } },
-            exportCSV() { Utils.generateCSV(Store.logs, 'AquaLog.csv'); },
+            exportCSV() { Utils.generateCSV(Store.logs, 'Aquazen.csv'); },
             importCSV(input) {
                 const file = input.files[0];
                 if (!file) return;
@@ -1761,7 +1761,7 @@
                         });
 
                         if(d >= startDateObj && dailyTasks.length > 0) {
-                            dailyTasks.push(`[ ] Atualizar na página do aqualog`);
+                            dailyTasks.push(`[ ] Atualizar na página do Aquazen`);
                             
                             // Format Date for ICS: YYYYMMDD
                             const dateStr = d.toISOString().replace(/[-:]/g, '').split('T')[0];
@@ -1784,14 +1784,14 @@
                     const icsContent = 
                         `BEGIN:VCALENDAR\n` +
                         `VERSION:2.0\n` +
-                        `PRODID:-//AquaLog//Maintenance//PT-BR\n` +
+                        `PRODID:-//Aquazen//Maintenance//PT-BR\n` +
                         events.join('\n') + `\n` +
                         `END:VCALENDAR`;
 
                     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(blob);
-                    link.download = `manutencao_aqualog_${year}.ics`;
+                    link.download = `manutencao_aquazen_${year}.ics`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);

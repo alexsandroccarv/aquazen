@@ -116,11 +116,9 @@
                 </div>
             </div>
             
-            <!-- Controls: seletor de aquários -->
+            <!-- Controls: seletor de aquários (criar/renomear/excluir ficam em Configuração) -->
             <div class="flex items-center gap-2">
                 <select id="tankSwitcher" onchange="App.switchTank(this.value)" class="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-200 max-w-[160px] focus:border-water-500 focus:outline-none" title="Trocar de aquário"></select>
-                <button onclick="Modules.Tanks.openNew()" class="w-7 h-7 flex items-center justify-center bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-300 hover:text-white transition" title="Novo aquário"><i class="fa-solid fa-plus text-xs"></i></button>
-                <button onclick="Modules.Tanks.open()" class="w-7 h-7 flex items-center justify-center bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-300 hover:text-white transition" title="Gerenciar aquários"><i class="fa-solid fa-list text-xs"></i></button>
             </div>
         </div>
 
@@ -425,6 +423,12 @@
                     localStorage.setItem(this._configKey(id), legacyConfig);
                     if (legacyLogs) localStorage.setItem(this._logsKey(id), legacyLogs);
                     if (legacyInv) localStorage.setItem(this._invKey(id), legacyInv);
+                } else {
+                    // Sem dados antigos: persiste os defaults já de cara, senão o
+                    // aquário fica sem nada gravado em aqua_config_<id> até o usuário
+                    // abrir e salvar Configurações — e getTankName() o mostraria como
+                    // "Aquário sem nome" até lá.
+                    localStorage.setItem(this._configKey(id), JSON.stringify(this._freshDefaultConfig()));
                 }
                 this.tanks = [id];
                 localStorage.setItem(CONFIG.storageKeyTanks, JSON.stringify(this.tanks));
@@ -1690,6 +1694,13 @@
                         <div class="bg-gray-900 w-full max-w-3xl rounded-lg shadow-2xl border border-gray-700 fade-in flex flex-col max-h-[90vh]">
                             <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850"><h3 class="font-bold text-white">Configurações</h3><button onclick="UI.closeModal()"><i class="fa-solid fa-times text-gray-400"></i></button></div>
                             <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                                <section class="bg-gray-800/50 p-4 rounded border border-gray-700">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h4 class="text-xs font-bold text-water-400 uppercase flex items-center gap-2"><i class="fa-solid fa-water"></i> Meus Aquários</h4>
+                                        <button type="button" onclick="Modules.Tanks.openNew()" class="text-xs bg-water-600 hover:bg-water-500 text-white px-3 py-1.5 rounded font-bold"><i class="fa-solid fa-plus mr-1"></i> Novo</button>
+                                    </div>
+                                    <div class="space-y-2" id="tanksList"></div>
+                                </section>
                                 <section class="bg-indigo-900/10 p-3 rounded border border-indigo-900/30">
                                     <h4 class="text-xs font-bold text-indigo-300 uppercase mb-2">Integração IA (Gemini)</h4>
                                     <div class="flex gap-2">
@@ -1754,8 +1765,9 @@
                     document.getElementById('cRefStart').value = c.maintenanceStartDate;
                     document.getElementById('btnCalcPhoto').onclick = calcPhoto;
                     
-                    calcPhoto(); 
+                    calcPhoto();
                     this.renderMaintList();
+                    Modules.Tanks.renderList();
                 },
                 handleRestore(input) {
                     const file = input.files[0];
@@ -2074,9 +2086,10 @@
                                     <h5 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-sliders text-emerald-400"></i> Configuração</h5>
                                     <p class="text-sm mb-2"><strong class="text-gray-400">Importante:</strong> defina aqui as regras do seu aquário.</p>
                                     <ul class="list-disc list-inside text-sm space-y-1">
+                                        <li><strong>Meus Aquários:</strong> crie, renomeie ou exclua aquários. Cada um tem seus próprios registros, inventário e configurações — trocar entre eles é feito pelo seletor no cabeçalho.</li>
                                         <li><strong>Ranges:</strong> limites ideais e críticos de cada parâmetro — controlam as cores dos alertas.</li>
                                         <li><strong>Plano de Manutenção:</strong> crie sua rotina (ex: TPA semanal, limpeza de filtro mensal) para alimentar o Cronograma e os Alertas de Atraso.</li>
-                                        <li><strong>Backup:</strong> exporte seus dados em JSON para segurança ou migração entre dispositivos/navegadores.</li>
+                                        <li><strong>Backup:</strong> exporte os dados do aquário atual em JSON para segurança ou migração entre dispositivos/navegadores.</li>
                                     </ul>
                                 </section>
                             </div>
@@ -2087,7 +2100,32 @@
                     UI.openModal(html);
                 }
             },
+            // Gerenciamento de aquários (criar/renomear/excluir) embutido dentro da
+            // tela de Configurações — só a troca rápida (o <select> do cabeçalho)
+            // fica fora, por ser uma ação de navegação e não uma configuração.
             Tanks: {
+                renderList() {
+                    const container = document.getElementById('tanksList');
+                    if (!container) return;
+                    container.innerHTML = Store.tanks.map(id => {
+                        const name = Store.getTankName(id);
+                        const isActive = id === Store.activeTankId;
+                        const canDelete = Store.tanks.length > 1;
+                        return `
+                            <div class="flex items-center justify-between bg-gray-900 p-2 rounded border ${isActive ? 'border-water-500' : 'border-gray-700'} gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid ${isActive ? 'fa-check text-water-400' : 'fa-water text-gray-600'}"></i>
+                                    <span class="text-xs text-white truncate">${Utils.escapeHtml(name)}</span>
+                                    ${isActive ? '<span class="text-[9px] uppercase text-water-400 border border-water-900 rounded px-1 shrink-0">Ativo</span>' : ''}
+                                </div>
+                                <div class="flex gap-3 shrink-0">
+                                    ${!isActive ? `<button type="button" onclick="Modules.Tanks.switchFromSettings('${id}')" title="Selecionar" class="text-water-400 hover:text-water-300"><i class="fa-solid fa-right-to-bracket"></i></button>` : ''}
+                                    <button type="button" onclick="Modules.Tanks.rename('${id}')" title="Renomear" class="text-blue-400 hover:text-blue-300"><i class="fa-solid fa-pen"></i></button>
+                                    <button type="button" onclick="Modules.Tanks.remove('${id}')" title="${canDelete ? 'Excluir' : 'Não é possível excluir o único aquário'}" class="${canDelete ? 'text-red-500 hover:text-red-400' : 'text-gray-700 cursor-not-allowed'}" ${canDelete ? '' : 'disabled'}><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>`;
+                    }).join('');
+                },
                 openNew() {
                     UI.openModal(`
                         <div class="bg-gray-800 p-6 rounded border border-gray-600 w-full max-w-sm">
@@ -2095,8 +2133,8 @@
                             <label class="text-xs text-gray-400">Nome do Aquário</label>
                             <input id="newTankName" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white mb-4 mt-1" placeholder="Ex: Tanque da Sala">
                             <div class="flex gap-2">
-                                <button onclick="UI.closeModal()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded">Cancelar</button>
-                                <button onclick="Modules.Tanks.createFromModal()" class="flex-1 bg-water-600 hover:bg-water-500 text-white font-bold py-2 rounded">Criar</button>
+                                <button type="button" onclick="Modules.References.open()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded">Cancelar</button>
+                                <button type="button" onclick="Modules.Tanks.createFromModal()" class="flex-1 bg-water-600 hover:bg-water-500 text-white font-bold py-2 rounded">Criar</button>
                             </div>
                         </div>`);
                     setTimeout(() => document.getElementById('newTankName')?.focus(), 50);
@@ -2105,7 +2143,6 @@
                     const name = document.getElementById('newTankName').value.trim();
                     if (!name) return UI.showToast('Digite um nome para o aquário.', 'error');
                     Store.createTank(name);
-                    UI.closeModal();
                     App.updateHeader();
                     App.applyTheme();
                     App.renderChecklist();
@@ -2114,42 +2151,13 @@
                     App.populateTankSwitcher();
                     App.switchView('dashboard');
                     UI.showToast(`Aquário "${name}" criado!`, 'success');
+                    Modules.References.open(); // volta pra Configurações já com o novo aquário ativo
                 },
-                open() {
-                    const rows = Store.tanks.map(id => {
-                        const name = Store.getTankName(id);
-                        const isActive = id === Store.activeTankId;
-                        const canDelete = Store.tanks.length > 1;
-                        return `
-                            <div class="flex items-center justify-between bg-gray-900 p-3 rounded border ${isActive ? 'border-water-500' : 'border-gray-700'} gap-2">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    <i class="fa-solid ${isActive ? 'fa-check text-water-400' : 'fa-water text-gray-600'}"></i>
-                                    <span class="text-sm text-white truncate">${Utils.escapeHtml(name)}</span>
-                                    ${isActive ? '<span class="text-[9px] uppercase text-water-400 border border-water-900 rounded px-1 shrink-0">Ativo</span>' : ''}
-                                </div>
-                                <div class="flex gap-3 shrink-0">
-                                    ${!isActive ? `<button onclick="Modules.Tanks.switchAndClose('${id}')" title="Selecionar" class="text-water-400 hover:text-water-300"><i class="fa-solid fa-right-to-bracket"></i></button>` : ''}
-                                    <button onclick="Modules.Tanks.rename('${id}')" title="Renomear" class="text-blue-400 hover:text-blue-300"><i class="fa-solid fa-pen"></i></button>
-                                    <button onclick="Modules.Tanks.remove('${id}')" title="${canDelete ? 'Excluir' : 'Não é possível excluir o único aquário'}" class="${canDelete ? 'text-red-500 hover:text-red-400' : 'text-gray-700 cursor-not-allowed'}" ${canDelete ? '' : 'disabled'}><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>`;
-                    }).join('');
-
-                    UI.openModal(`
-                        <div class="bg-gray-900 w-full max-w-lg rounded-lg shadow-2xl border border-gray-700 fade-in flex flex-col max-h-[85vh]">
-                            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850 rounded-t-lg">
-                                <h3 class="font-bold text-white"><i class="fa-solid fa-water text-water-400 mr-2"></i> Meus Aquários</h3>
-                                <button onclick="UI.closeModal()"><i class="fa-solid fa-times text-gray-400"></i></button>
-                            </div>
-                            <div class="flex-1 overflow-y-auto p-4 space-y-2">${rows}</div>
-                            <div class="p-4 border-t border-gray-700 bg-gray-850">
-                                <button onclick="UI.closeModal(); Modules.Tanks.openNew();" class="w-full bg-water-600 hover:bg-water-500 text-white font-bold py-2 rounded"><i class="fa-solid fa-plus mr-1"></i> Novo Aquário</button>
-                            </div>
-                        </div>`);
-                },
-                switchAndClose(id) {
-                    UI.closeModal();
+                switchFromSettings(id) {
                     App.switchTank(id);
+                    // Recarrega Configurações do zero: todos os campos do formulário
+                    // (ranges, nome, tema, etc.) pertencem ao aquário ativo.
+                    Modules.References.open();
                 },
                 rename(id) {
                     const current = Store.getTankName(id);
@@ -2158,8 +2166,8 @@
                             <h3 class="text-white font-bold mb-4"><i class="fa-solid fa-pen text-blue-400 mr-2"></i> Renomear Aquário</h3>
                             <input id="renameTankInput" value="${Utils.escapeHtml(current)}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white mb-4">
                             <div class="flex gap-2">
-                                <button onclick="Modules.Tanks.open()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded">Cancelar</button>
-                                <button onclick="Modules.Tanks.saveRename('${id}')" class="flex-1 bg-water-600 hover:bg-water-500 text-white font-bold py-2 rounded">Salvar</button>
+                                <button type="button" onclick="Modules.References.open()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded">Cancelar</button>
+                                <button type="button" onclick="Modules.Tanks.saveRename('${id}')" class="flex-1 bg-water-600 hover:bg-water-500 text-white font-bold py-2 rounded">Salvar</button>
                             </div>
                         </div>`);
                     setTimeout(() => document.getElementById('renameTankInput')?.focus(), 50);
@@ -2170,14 +2178,16 @@
                     Store.renameTank(id, name);
                     if (id === Store.activeTankId) App.updateHeader();
                     App.populateTankSwitcher();
-                    this.open();
                     UI.showToast('Aquário renomeado!', 'success');
+                    Modules.References.open();
                 },
                 async remove(id) {
                     if (Store.tanks.length <= 1) return UI.showToast('Você precisa manter pelo menos um aquário.', 'error');
                     const name = Store.getTankName(id);
+                    // UI.showConfirm troca o conteúdo do modal pelo diálogo Sim/Não e o
+                    // fecha ao resolver; por isso reabrimos Configurações nos dois casos.
                     const confirmed = await UI.showConfirm(`Excluir "${Utils.escapeHtml(name)}"? Todos os registros e o inventário desse aquário serão perdidos permanentemente.`);
-                    if (!confirmed) return;
+                    if (!confirmed) { Modules.References.open(); return; }
                     Store.deleteTank(id);
                     App.updateHeader();
                     App.applyTheme();
@@ -2186,8 +2196,8 @@
                     App.checkAlerts();
                     App.populateTankSwitcher();
                     App.switchView('dashboard');
-                    this.open();
                     UI.showToast('Aquário excluído.', 'success');
+                    Modules.References.open();
                 }
             }
         };

@@ -25,7 +25,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Conferir arquivo principal
-        run: test -f index.html || { echo "ERRO: index.html ausente."; exit 1; }
+        run: |
+          test -f index.html || { echo "ERRO: index.html ausente."; exit 1; }
 
       # Publica no servidor via rsync sobre SSH. O script PULA automaticamente
       # (sem falhar) se os secrets ainda não estiverem configurados — então o
